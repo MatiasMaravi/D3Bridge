@@ -1,0 +1,268 @@
+/* === Contenedor Principal === */
+.vp-matrix-creator-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* === Grid de la Matriz === */
+.vp-matrix-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    min-height: 200px;
+    padding: 20px;
+}
+
+.vp-matrix-grid {
+    display: inline-block;
+    padding: 1rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease-out;
+    border: 3px solid #000000;
+    overflow: visible;
+    position: relative;
+    user-select: none; /* Previene selección de texto al arrastrar */
+}
+
+.vp-matrix-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
+/* === Celdas de la Matriz === */
+.vp-matrix-grid .vp-matrix-cell {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    border: 2px solid #34495e;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: white;
+    outline: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box; /* Asegura que el borde no aumente el tamaño */
+    position: relative;
+}
+
+.vp-matrix-grid .vp-matrix-cell:hover {
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    z-index: 10;
+    border-color: #667eea;
+}
+
+.vp-matrix-grid .vp-matrix-cell.selecting {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+    box-shadow: inset 0 0 8px rgba(102, 126, 234, 0.4);
+    z-index: 5;
+}
+
+/* Estilo para celdas que ya tienen grupo asignado */
+.vp-matrix-grid .vp-matrix-cell[data-group]:not([data-group="0"]) {
+    border: 2px solid white;
+    margin: 0;
+}
+
+/* === Panel de Control === */
+.vp-control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+    align-self: flex-start;
+}
+
+.vp-group-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.vp-group-label {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+}
+
+.vp-current-group-display {
+    font-weight: bold;
+    padding: 8px 20px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1.3em;
+    min-width: 50px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* === Botones === */
+.vp-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.vp-matrix-button {
+    padding: 10px 16px;
+    margin: 5px 0;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background: #3498db;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.3s;
+    min-width: 150px;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+.vp-matrix-button:hover {
+    background: #2980b9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+}
+
+.vp-matrix-button:active {
+    transform: translateY(1px);
+}
+
+/* === Mensajes de Confirmación/Error === */
+.vp-message-container {
+    min-height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.vp-confirmation-message {
+    background: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.vp-confirmation-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.vp-confirmation-message.error-message {
+    background: #e74c3c;
+}
+
+.vp-check-icon {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* === Animaciones === */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .vp-matrix-creator-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    /* Aumentamos especificidad para sobreescribir el estilo base */
+    .vp-matrix-grid .vp-matrix-cell {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8em;
+    }
+    
+    .vp-control-panel {
+        width: 100%;
+        max-width: 350px;
+        padding: 15px;
+    }
+    
+    .vp-matrix-button {
+        padding: 8px 12px;
+        font-size: 0.8em;
+    }
+}
+
+/* === Matrix Layout Themes === */
+
+.basic .vp-dashboard-div {
+  border: 1px solid black;
+  text-align: center;
+}
+
+.dark .vp-dashboard-div {
+  margin: 2px;
+  border-radius: 10px;
+  background-color: #262626;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+.glassmorphism .vp-dashboard-div {
+  margin: 5px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.neumorphism .vp-dashboard-div {
+  margin: 10px;
+  border-radius: 15px;
+  background-color: #e0e0e0;
+  box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+}
+
+.minimalism .vp-dashboard-div {
+  margin-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}

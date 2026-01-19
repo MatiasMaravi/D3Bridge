@@ -1,4 +1,4 @@
-.vizpro button {
+.vp-button {
 	background: linear-gradient(
 		300deg,
 		#9933ff 33.26%,
@@ -18,11 +18,11 @@
 	transition: transform 0.25s ease-in-out;
 }
 
-.vizpro button:hover {
+.vp-button:hover {
 	transform: scale(1.05);
 }
 
-.vizpro checkbox {
+.vp-checkbox {
 	background: linear-gradient(
 		300deg,
 		#9933ff 33.26%,

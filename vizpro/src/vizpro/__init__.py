@@ -7,3 +7,4 @@ except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
     
 from .widgets import *  
+from .layouts import *

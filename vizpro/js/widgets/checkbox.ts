@@ -12,6 +12,7 @@ interface CheckboxModel {
 export interface CheckboxParams {
     description: string;
     disabled: boolean;
+    checked: boolean;
     setChecked: (state: { checked: boolean }) => void;
 }
 
@@ -20,8 +21,13 @@ class Checkbox {
     private checkbox!: HTMLInputElement;
     private container!: HTMLDivElement;
     private label!: HTMLLabelElement;
+    private instanceId: string;
 
-    constructor(private element: HTMLElement) {}
+    constructor(private element: HTMLElement) {
+        // ID único para identificar cada instancia de vista
+        this.instanceId = Math.random().toString(36).substring(7);
+        console.log(`[Checkbox ${this.instanceId}] Constructor called`);
+    }
 
     onDescriptionChanged(description: string) {
         if (!this.label) {
@@ -33,14 +39,26 @@ class Checkbox {
         this.label.textContent = description;
     }
     onDisabledChanged(disabled: boolean) {
-		if (this.checkbox) {
-			if (disabled) this.checkbox.setAttribute("disabled", "");
-			else this.checkbox.removeAttribute("disabled");
-		}
-	}
+        if (this.checkbox) {
+            if (disabled) this.checkbox.setAttribute("disabled", "");
+            else this.checkbox.removeAttribute("disabled");
+        }
+    }
+
+    onCheckedChanged(checked: boolean) {
+        console.log(`[Checkbox ${this.instanceId}] onCheckedChanged called with:`, checked);
+        // console.log(`[Checkbox ${this.instanceId}] this.checkbox exists:`, !!this.checkbox);
+        if (this.checkbox) {
+            // Validación para evitar ciclos y parpadeos al recibir el eco de Python
+            if (this.checkbox.checked !== checked) {
+                console.log(`[Checkbox ${this.instanceId}] Updating DOM to:`, checked);
+                this.checkbox.checked = checked;
+            }
+        }
+    }
 
     plot(params: CheckboxParams) {
-        const { description, disabled, setChecked } = params;
+        const { description, disabled, checked, setChecked } = params;
 
         this.container = document.createElement("div");
         this.container.classList.add("checkbox_container");
@@ -48,6 +66,11 @@ class Checkbox {
         this.checkbox = document.createElement("input");
         this.checkbox.type = "checkbox";
         this.checkbox.classList.add("vp_checkbox");
+        
+        // Initial state
+        this.checkbox.checked = checked;
+        console.log(`[Checkbox ${this.instanceId}] Plot called, initial checked:`, checked);
+
         this.checkbox.addEventListener("change", (e) => {
             setChecked({ checked: (e.target as HTMLInputElement).checked });
         });
@@ -72,6 +95,7 @@ function render({ model, el }: RenderProps<CheckboxModel>) {
     widget.plot({
         description: model.get("description"),
         disabled: model.get("disabled"),
+        checked: model.get("checked"),
         setChecked: setChecked
     });
 
@@ -80,8 +104,13 @@ function render({ model, el }: RenderProps<CheckboxModel>) {
     });
 
     model.on("change:disabled", () => {
-		widget.onDisabledChanged(model.get("disabled"));
-	});
+        widget.onDisabledChanged(model.get("disabled"));
+    });
+
+    model.on("change:checked", () => {
+        console.log(`[Checkbox] model.on change:checked fired, new value:`, model.get("checked"));
+        widget.onCheckedChanged(model.get("checked"));
+    });
 }
 
 export default { render };

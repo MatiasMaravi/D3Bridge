@@ -6,8 +6,8 @@ import traitlets
 
 
 class Button(anywidget.AnyWidget):
-    _esm = pathlib.Path(__file__).parent / "static" / "button.js"
-    _css = pathlib.Path(__file__).parent / "static" / "button.css"
+    _esm = pathlib.Path(__file__).parent / "static" / "widgets" / "button.js"
+    _css = pathlib.Path(__file__).parent / "static" / "widgets" / "button.css"
     description = traitlets.Unicode("").tag(sync=True)
     disabled = traitlets.Bool(False).tag(sync=True)
 
@@ -17,8 +17,8 @@ class Button(anywidget.AnyWidget):
         self.observe(callback, names=["_clicked"])
 
 class Checkbox(anywidget.AnyWidget):
-    _esm = pathlib.Path(__file__).parent / "static" / "checkbox.js"
-    _css = pathlib.Path(__file__).parent / "static" / "checkbox.css"
+    _esm = pathlib.Path(__file__).parent / "static" / "widgets" / "checkbox.js"
+    _css = pathlib.Path(__file__).parent / "static" / "widgets" / "checkbox.css"
 
     description = traitlets.Unicode("").tag(sync=True)
     disabled = traitlets.Bool(False).tag(sync=True)
