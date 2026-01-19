@@ -58,7 +58,7 @@ const render: Render = ({ model, el }) => {
             if (!wrapper) {
                 // Nuevo widget
                 wrapper = document.createElement("div");
-                wrapper.classList.add("dashboard-div"); 
+                wrapper.classList.add("vp-dashboard-div"); 
                 wrapper.dataset.widgetId = modelId;
                 wrapper.style.overflow = "auto"; 
                 gridContainer.appendChild(wrapper);

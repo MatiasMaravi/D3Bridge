@@ -33,7 +33,7 @@ class Checkbox {
         if (!this.label) {
             this.label = document.createElement("label");
             this.label.htmlFor = this.checkbox.id;
-            this.label.classList.add("vp_checkbox_label");
+            this.label.classList.add("vp-checkbox_label");
             this.container.appendChild(this.label);
         }
         this.label.textContent = description;
@@ -61,11 +61,11 @@ class Checkbox {
         const { description, disabled, checked, setChecked } = params;
 
         this.container = document.createElement("div");
-        this.container.classList.add("checkbox_container");
+        this.container.classList.add("vp-checkbox_container");
 
         this.checkbox = document.createElement("input");
         this.checkbox.type = "checkbox";
-        this.checkbox.classList.add("vp_checkbox");
+        this.checkbox.classList.add("vp-checkbox");
         
         // Initial state
         this.checkbox.checked = checked;

@@ -39,10 +39,10 @@ class Button {
 		const { description, disabled, setClicked } = params;
 
 		this.container = document.createElement("div");
-		this.container.classList.add("button_container");
+		this.container.classList.add("vp-button_container");
 
 		this.button = document.createElement("button");
-		this.button.classList.add("vp_button");
+		this.button.classList.add("vp-button");
 		this.button.addEventListener("click", setClicked);
 
 		this.onDescriptionChanged(description);
