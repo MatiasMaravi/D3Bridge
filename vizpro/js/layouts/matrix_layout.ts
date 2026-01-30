@@ -60,7 +60,14 @@ const render: Render = ({ model, el }) => {
                 wrapper = document.createElement("div");
                 wrapper.classList.add("vp-dashboard-div"); 
                 wrapper.dataset.widgetId = modelId;
-                wrapper.style.overflow = "auto"; 
+                
+                wrapper.style.minHeight = "0"; 
+                wrapper.style.minWidth = "0";
+                    
+                wrapper.style.height = "100%";
+                wrapper.style.width = "100%";
+
+                wrapper.style.overflow = "hidden"; 
                 gridContainer.appendChild(wrapper);
                 
                 // --- CORRECCIÓN: Guardar referencia ---
