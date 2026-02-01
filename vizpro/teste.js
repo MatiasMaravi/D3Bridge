@@ -38,10 +38,12 @@ function render({ model, el }) {
         element.innerHTML = "";
 
 					const data = model.get("data");
-					const metric = model.get("metric");
+					const x = model.get("x");
+					const y = model.get("y");
+					const pallete = model.get("pallete");
 
 
-        plot(data, metric);
+        plot(data, x, y, pallete);
     }
 
     function initializeWidget() {
@@ -55,14 +57,18 @@ function render({ model, el }) {
 
         // Registrar cambios en el modelo
 					model.on("change:data", replot);
-					model.on("change:metric", replot);
+					model.on("change:x", replot);
+					model.on("change:y", replot);
+					model.on("change:pallete", replot);
 
 
         // Renderizar inicialmente
 					const data = model.get("data");
-					const metric = model.get("metric");
+					const x = model.get("x");
+					const y = model.get("y");
+					const pallete = model.get("pallete");
 
-        plot(data, metric);
+        plot(data, x, y, pallete);
     }
 
     // Usar ResizeObserver solo para detectar cambios de ANCHO
@@ -97,76 +103,63 @@ function render({ model, el }) {
         }
     });
 
-    function plot(data,metric){
-
-  const data_2 = d3.sort(data, d => d[2019] - d[2010])
-    .map((d) => ({
-      ...d,
-      value:metric === "absolute" ? d[2019] - d[2010] : (d[2019] - d[2010]) / d[2010]
-    }));
-  
+    function plot(data,x_,y_,pallete) {
+    console.log("Pallete:", pallete);
+  // Usar dimensiones del contenedor
   const marginTop = 30;
-  const marginRight = 60;
-  const marginBottom = 10;
-  const marginLeft = 60;
+  const marginRight = 20;
+  const marginBottom = 30;
+  const marginLeft = 40;
 
+  // Limpiar el contenedor
   d3.select(element).selectAll("*").remove();
 
-  const x = d3.scaleLinear()
-    .domain(d3.extent(data_2, d => d.value))
-    .rangeRound([marginLeft, width - marginRight]);
+  // Declare the x (horizontal position) scale.
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(data, ([d]) => -d[y_], (d) => d[x_])) // descending frequency
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(data, (d) => d[y_])])
+      .range([height - marginBottom, marginTop]);
 
-  const y = d3.scaleBand()
-    .domain(data_2.map(d => d.State))
-    .rangeRound([marginTop, height - marginBottom])
-    .padding(0.1);
-
-  // Create the format function.
-  const format = d3.format(metric === "absolute" ? "+,d" : "+.1%");
-  const tickFormat = metric === "absolute" ? d3.formatPrefix("+.1", 1e6) : d3.format("+.0%");
-
+  // Create the SVG container.
   const svg = d3.select(element)
       .append("svg")
+      .attr("width", width)
+      .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
+      .attr("style", "max-width: 100%; height: auto;");
 
+  // Add a rect for each bar.
   svg.append("g")
     .selectAll()
-    .data(data_2)
+    .data(data)
     .join("rect")
-      .attr("fill", (d) => d3.schemeRdBu[3][d.value > 0 ? 2 : 0])
-      .attr("x", (d) => x(Math.min(d.value, 0)))
-      .attr("y", (d) => y(d.State))
-      .attr("width", d => Math.abs(x(d.value) - x(0)))
-      .attr("height", y.bandwidth());
+      .attr("x", (d) => x(d[x_]))
+      .attr("y", (d) => y(d[y_]))
+      .attr("height", (d) => y(0) - y(d[y_]))
+      .attr("width", x.bandwidth())
+      .attr("fill", (d, i) => pallete[i % pallete.length]);
 
+  // Add the x-axis and label.
   svg.append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10)
-    .selectAll()
-    .data(data_2)
-    .join("text")
-      .attr("text-anchor", d => d.value < 0 ? "end" : "start")
-      .attr("x", (d) => x(d.value) + Math.sign(d.value - 0) * 4)
-      .attr("y", (d) => y(d.State) + y.bandwidth() / 2)
-      .attr("dy", "0.35em")
-      .text(d => format(d.value));
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
 
+  // Add the y-axis and label, and remove the domain line.
   svg.append("g")
-    .attr("transform", `translate(0,${marginTop})`)
-    .call(d3.axisTop(x).ticks(width / 80).tickFormat(tickFormat))
-    .call(g => g.selectAll(".tick line").clone()
-          .attr("y2", height - marginTop - marginBottom)
-          .attr("stroke-opacity", 0.1))
-    .call(g => g.select(".domain").remove());
-
-  svg.append("g")
-    .attr("transform", `translate(${x(0)},0)`)
-    .call(d3.axisLeft(y).tickSize(0).tickPadding(6))
-    .call(g => g.selectAll(".tick text").filter((d, i) => data_2[i].value < 0)
-        .attr("text-anchor", "start")
-        .attr("x", 6));
-
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y * 100).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ Frequency (%)"));
 }
 }
 

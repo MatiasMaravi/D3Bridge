@@ -1,11 +1,5 @@
-/**
- * Bar chart adaptado para usar con CustomWidget
- * Usa las variables del contexto: element, width, height, data
- * 
- * @param {Array} data - Array de objetos con propiedades 'letter' y 'frequency'
- */
-function plot(data) {
-  // Usar dimensiones del contenedor
+function plot(data,x_,y_,pallete) {
+
   const marginTop = 30;
   const marginRight = 20;
   const marginBottom = 30;
@@ -16,13 +10,13 @@ function plot(data) {
 
   // Declare the x (horizontal position) scale.
   const x = d3.scaleBand()
-      .domain(d3.groupSort(data, ([d]) => -d.frequency, (d) => d.letter)) // descending frequency
+      .domain(d3.groupSort(data, ([d]) => -d[y_], (d) => d[x_])) // descending frequency
       .range([marginLeft, width - marginRight])
       .padding(0.1);
   
   // Declare the y (vertical position) scale.
   const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d) => d.frequency)])
+      .domain([0, d3.max(data, (d) => d[y_])])
       .range([height - marginBottom, marginTop]);
 
   // Create the SVG container.
@@ -35,14 +29,14 @@ function plot(data) {
 
   // Add a rect for each bar.
   svg.append("g")
-      .attr("fill", "steelblue")
     .selectAll()
     .data(data)
     .join("rect")
-      .attr("x", (d) => x(d.letter))
-      .attr("y", (d) => y(d.frequency))
-      .attr("height", (d) => y(0) - y(d.frequency))
-      .attr("width", x.bandwidth());
+      .attr("x", (d) => x(d[x_]))
+      .attr("y", (d) => y(d[y_]))
+      .attr("height", (d) => y(0) - y(d[y_]))
+      .attr("width", x.bandwidth())
+      .attr("fill", (d, i) => pallete[i % pallete.length]);
 
   // Add the x-axis and label.
   svg.append("g")

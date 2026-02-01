@@ -6,7 +6,7 @@ try:
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
     
-from .widgets import *  
 from .layouts import *
 from .custom import *
 from .observable_inputs import *
+from .datasets import *

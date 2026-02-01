@@ -1,0 +1,68 @@
+/* Swatches Widget Styles - Prefijo "vp" */
+
+.vp-swatches-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vp-swatches-label {
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.vp-swatches-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vp-swatches-row {
+  position: relative;
+  height: 40px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.vp-swatches-row:hover {
+  transform: scale(1.01);
+}
+
+.vp-swatches-row--selected {
+  transform: scale(1.02);
+  z-index: 1;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid #333;
+}
+
+.vp-swatches-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vp-swatches-name {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.vp-swatches-name--light {
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.vp-swatches-name--dark {
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}

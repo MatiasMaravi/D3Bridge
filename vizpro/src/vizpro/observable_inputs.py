@@ -1,4 +1,6 @@
+import pathlib
 import anywidget
+import traitlets
 import urllib3
 from traitlets import Unicode, Any
 
@@ -349,3 +351,22 @@ class RangeInput(ObservableInputWidget):
         super().__init__(**kwargs)
         if value is not None:
             self.value = value
+#Esta clase no depende de "ObservableInputWidget",
+# Esto es así porque "Swatches" no es un input genérico en Observable Inputs,
+class SwatchesInput(anywidget.AnyWidget):
+    """
+    Widget de selección de paletas de colores D3.
+    Muestra todas las paletas disponibles y permite seleccionar una.
+    El valor es la lista completa de colores de la paleta seleccionada.
+    
+    Paletas disponibles:
+    - Observable10, Category10, Accent, Dark2, Paired
+    - Pastel1, Pastel2, Set1, Set2, Set3, Tableau10
+    """
+    _esm = pathlib.Path(__file__).parent / "static" / "widgets" / "swatches.js"
+    _css = pathlib.Path(__file__).parent / "static" / "widgets" / "swatches.css"
+    #Lista de paleta de colores
+    value = traitlets.List(allow_none=True).tag(sync=True)
+
+    # Guardamos el NOMBRE para saber cual resaltar en la UI
+    palette_name = traitlets.Unicode(allow_none=True).tag(sync=True)
