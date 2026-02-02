@@ -241,6 +241,7 @@ function render({{ model, el }}) {{
     // Estilos del contenedor
     el.style.padding = "10px";
     el.style.fontFamily = "system-ui, -apple-system, sans-serif";
+    el.style.color = "#333";
 
     function createInput() {{
         el.innerHTML = "";

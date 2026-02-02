@@ -1,0 +1,176 @@
+.vp-button {
+	background: linear-gradient(
+		300deg,
+		#9933ff 33.26%,
+		#ff6666 46.51%,
+		#faca30 59.77%,
+		#00cd99 73.03%,
+		#00ccff 86.29%
+	);
+	border-radius: 10px;
+	border: 0;
+	color: white;
+	cursor: pointer;
+	font-family: "Roboto", sans-serif;
+	font-size: 2em;
+	margin: 10px;
+	padding: 10px 20px;
+	transition: transform 0.25s ease-in-out;
+}
+
+.vp-button:hover {
+	transform: scale(1.05);
+}
+
+.vp-checkbox {
+	background: linear-gradient(
+		300deg,
+		#9933ff 33.26%,
+		#ff6666 46.51%,
+		#faca30 59.77%,
+		#00cd99 73.03%,
+		#00ccff 86.29%
+	);
+	border-radius: 10px;
+	border: 0;
+	color: white;
+	cursor: pointer;
+	font-family: "Roboto", sans-serif;
+	font-size: 2em;
+	margin: 10px;
+	padding: 10px 20px;
+	transition: transform 0.25s ease-in-out;
+}
+
+/***** RANGE SLIDER *****/
+
+/* 1. Contenedor Principal */
+.vp-range_outside_container {
+  display: flex;
+  width: 100%;
+  max-width: 600px; 
+  margin: 20px auto;
+  
+  /* Alineación */
+  align-items: center;
+  justify-content: space-between; 
+  flex-wrap: nowrap;
+  gap: 15px;
+
+  font-weight: bold; 
+}
+
+/* 2. Textos (Izquierda y Derecha) */
+.vp-range_description {
+  white-space: nowrap;
+  flex: 0 0 auto; 
+  text-align: left;
+}
+
+.vp-range_value {
+  white-space: nowrap;
+  flex: 0 0 auto; 
+  text-align: right; 
+  min-width: 80px;
+}
+
+
+.vp-range_inside_container {
+  position: relative;
+  display: flex;
+  flex: 1;
+  height: 50px; 
+  align-items: center; 
+  min-width: 150px;
+}
+
+.vp-sliders_control {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+
+.vp-sliders_control::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  transform: translateY(-50%);
+  background-color: #f79847;
+  border-radius: 5px;
+  z-index: 0;
+}
+
+/* 5. INPUTS (Los deslizadores) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  
+  background: transparent !important; 
+  background-color: transparent !important;
+  
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  margin: 0;
+  
+  pointer-events: none; /* Permite clic a través */
+  z-index: 2;
+}
+
+/* 6. THUMBS (Los círculos) */
+/* Webkit */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: all; /* Reactivamos clic en el círculo */
+  width: 24px;
+  height: 24px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #c6c6c6, 0 2px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+  position: relative;
+}
+
+/* Mozilla */
+input[type="range"]::-moz-range-thumb {
+  appearance: none;
+  pointer-events: all;
+  width: 24px;
+  height: 24px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #c6c6c6;
+  cursor: pointer;
+  border: none;
+  position: relative;
+}
+
+/* Efectos Hover */
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #f7f7f7;
+  transform: scale(1.1);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  box-shadow: inset 0 0 3px #387bbe, 0 0 9px #387bbe;
+}
+
+input[type="range"]:focus {
+  outline: none; 
+}
+
+input[type="range"]:hover {
+  z-index: 5; 
+}
+
+
+.active-slider {
+  z-index: 10 !important;
+}

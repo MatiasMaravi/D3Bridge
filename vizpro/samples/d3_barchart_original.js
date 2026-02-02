@@ -1,22 +1,21 @@
-function plot(data,x_,y_,pallete) {
+function plot(data) {
 
   const marginTop = 30;
-  const marginRight = 20;
+  const marginRight = 0;
   const marginBottom = 30;
   const marginLeft = 40;
 
   // Limpiar el contenedor
   d3.select(element).selectAll("*").remove();
-
   // Declare the x (horizontal position) scale.
   const x = d3.scaleBand()
-      .domain(d3.groupSort(data, ([d]) => -d[y_], (d) => d[x_])) // descending frequency
+      .domain(d3.groupSort(data, ([d]) => -d.frequency, (d) => d.letter)) // descending frequency
       .range([marginLeft, width - marginRight])
       .padding(0.1);
   
   // Declare the y (vertical position) scale.
   const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d) => d[y_])])
+      .domain([0, d3.max(data, (d) => d.frequency)])
       .range([height - marginBottom, marginTop]);
 
   // Create the SVG container.
@@ -29,14 +28,14 @@ function plot(data,x_,y_,pallete) {
 
   // Add a rect for each bar.
   svg.append("g")
+      .attr("fill", "steelblue")
     .selectAll()
     .data(data)
     .join("rect")
-      .attr("x", (d) => x(d[x_]))
-      .attr("y", (d) => y(d[y_]))
-      .attr("height", (d) => y(0) - y(d[y_]))
-      .attr("width", x.bandwidth())
-      .attr("fill", (d, i) => pallete[i % pallete.length]);
+      .attr("x", (d) => x(d.letter))
+      .attr("y", (d) => y(d.frequency))
+      .attr("height", (d) => y(0) - y(d.frequency))
+      .attr("width", x.bandwidth());
 
   // Add the x-axis and label.
   svg.append("g")
@@ -54,4 +53,5 @@ function plot(data,x_,y_,pallete) {
           .attr("fill", "currentColor")
           .attr("text-anchor", "start")
           .text("↑ Frequency (%)"));
+
 }
