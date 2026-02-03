@@ -1,42 +1,41 @@
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Iterator
+from typing import List, Dict, Any, Optional, Iterator, Union
 
 class Dataframe:
-    def __init__(self, data: List[Dict[str, Any]] = None, name: str = ""):
+    def __init__(self, data: pd.DataFrame = None, name: str = ""):
         # Inicialización segura
-        self._data = data if data is not None else []
+        self._data = data if data is not None else pd.DataFrame()
         self._name = name
-        
-        # Calcular columnas automáticamente si hay datos
-        if self._data and len(self._data) > 0:
-            self._columns = list(self._data[0].keys())
-        else:
-            self._columns = []
+
 
     # --- Propiedades (Getters & Setters Seguros) ---
     @property
     def data(self) -> List[Dict[str, Any]]:
-        return self._data
+        return self._data.to_dict(orient="records")
     
     @data.setter
     def data(self, value: List[Dict[str, Any]]):
         if not isinstance(value, list):
             raise ValueError("data debe ser una lista de diccionarios")
-        self._data = value
+        self._data = pd.DataFrame(value)
         # Actualizar columnas automáticamente al cambiar los datos
-        if value:
-            self.columns = list(value[0].keys())
+        if not self._data.empty:
+            self.columns = list(self._data.columns)
 
     @property
     def columns(self) -> List[str]:
-        return self._columns
+        # Lee siempre la verdad actual del dataframe
+        return self._data.columns.tolist() if self._data is not None else []
     
     @columns.setter
     def columns(self, value: List[str]):
         if not isinstance(value, list):
             raise ValueError("columns debe ser una lista de strings")
-        self._columns = value
+        # Esto realmente renombra las columnas en el DataFrame
+        if len(value) != len(self._data.columns):
+             raise ValueError("La longitud de la lista no coincide con el número de columnas")
+        self._data.columns = value
 
     @property
     def name(self) -> str:
@@ -48,52 +47,84 @@ class Dataframe:
             raise ValueError("name debe ser una cadena de texto")
         self._name = value
     # --- Métodos para simular comportamiento de Lista (Observable Style) ---
-    def __getitem__(self, index):
-        """Permite acceder como df[0]"""
-        return self._data[index]
+    # --- Método unificado para simular comportamiento de Lista ---
+    def __getitem__(self, item: Union[int, str]):
+        """
+        Maneja acceso dual:
+        - Si es int: Devuelve la fila (iloc)
+        - Si es str: Devuelve la columna como lista
+        """
+        # Caso 1: Acceso por índice numérico (Fila)
+        if isinstance(item, int):
+            return self._data.iloc[item].to_dict()
+        
+        # Caso 2: Acceso por nombre de columna (Lista de valores)
+        elif isinstance(item, str):
+            if item not in self._data.columns:
+                raise KeyError(f"La columna '{item}' no existe en el Dataframe.")
+            return self._data[item].tolist()
+        
+        # Caso 3: Error para otros tipos
+        else:
+            raise TypeError(f"El índice debe ser int (fila) o str (columna), no {type(item)}")
 
     def __iter__(self) -> Iterator[Dict[str, Any]]:
         """Permite iterar como: for row in df: ..."""
-        return iter(self._data)
+        return iter(self._data.to_dict(orient="records"))
 
     def __len__(self) -> int:
         """Permite usar len(df)"""
         return len(self._data)
 
-    def head(self, n: int = 5) -> List[Dict[str, Any]]:
-        return self._data[:n]
+    def head(self, n: int = 5) -> pd.DataFrame:
+        return self._data.head(n)
 
-    def to_pandas(self) -> pd.DataFrame:
-        """Utilidad para volver a Pandas si es necesario"""
-        return pd.DataFrame(self._data)
-
-    # --- Representación en Jupyter (Magic) ---
     def _repr_html_(self):
-        """Muestra una tabla HTML bonita en Jupyter Notebooks automáticamente"""
-        title = f"<b>Dataframe: {self.name}</b> ({len(self)} rows, {len(self.columns)} columns)<br>"
-        # Usamos pandas solo para renderizar el HTML de la muestra, es más eficiente
-        return title + pd.DataFrame(self.head(5)).to_html(index=False)
-
+        return self._data.head().to_html(index=False)
+    
     def __repr__(self) -> str:
         return f"<Dataframe name='{self.name}' rows={len(self)} columns={self.columns}>"
-class Datasets:
-    _DATASETS = {
+    
+    #--- Otros métodos útiles ---
+    # Min of a column
+    def min(self, column: str) -> Any:
+        if column not in self._data.columns:
+            raise ValueError(f"La columna '{column}' no existe en el Dataframe.")
+        value = self._data[column].min()
+        if pd.isna(value):
+            return None
+        elif isinstance(value, (pd.Timestamp, pd.Timedelta)):
+            return value.isoformat()
+        else:
+            return value.item()
+    # Max of a column
+    def max(self, column: str) -> Any:
+        if column not in self._data.columns:
+            raise ValueError(f"La columna '{column}' no existe en el Dataframe.")
+        value = self._data[column].max()
+        if pd.isna(value):
+            return None
+        elif isinstance(value, (pd.Timestamp, pd.Timedelta)):
+            return value.isoformat()
+        else:
+            return value.item()
+    
+    
+
+_DATASETS = {
         "alphabet": "alphabet.csv",
         "sales": "sales.csv",
         "state-population-2010-2019": "state-population-2010-2019.tsv",
         "affairs": "affairs.csv"
-    }
-    
-    _BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
-
-    @classmethod
-    def get_dataset(cls, name: str) -> 'Dataframe': # Type hint string forward reference
+    }    
+_BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
+def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference
         """Carga un dataset interno (archivo local o URL) por su nombre."""
-        if name not in cls._DATASETS:
-            options = ", ".join(cls._DATASETS.keys())
+        if name not in _DATASETS:
+            options = ", ".join(_DATASETS.keys())
             raise ValueError(f"Dataset '{name}' no encontrado. Disponibles: {options}")
 
-        source = cls._DATASETS[name]
+        source = _DATASETS[name]
         
         # --- LÓGICA HÍBRIDA (URL vs LOCAL) ---
         if source.startswith(("http://", "https://")):
@@ -101,14 +132,12 @@ class Datasets:
             file_path = source
         else:
             # Si es local, construimos la ruta absoluta
-            file_path = cls._BASE_PATH / source
+            file_path = _BASE_PATH / source
         
-        df = cls.read_dataset(file_path)
+        df = read_dataset(file_path)
         df.name = name
         return df
-
-    @staticmethod
-    def read_dataset(file_path: str | Path, sep: Optional[str] = None) -> 'Dataframe':
+def read_dataset(file_path: str | Path, sep: Optional[str] = None) -> 'Dataframe':
         """Lee un archivo local O una URL y devuelve un objeto Dataframe."""
         
         # Convertimos a string para verificar si es URL
@@ -135,14 +164,14 @@ class Datasets:
             # pero para raw gists suele funcionar directo.
             pd_df = pd.read_csv(path_str, sep=sep)
             
-            records = pd_df.to_dict(orient="records")
-            
-            return Dataframe(data=records, name=path_obj.stem)
+            return Dataframe(data=pd_df, name=path_obj.stem)
             
         except Exception as e:
             msg = "descargar la URL" if is_url else "leer el archivo"
             raise RuntimeError(f"Error al {msg}: {e}")
 
-    @classmethod
-    def list_available(cls) -> List[str]:
-        return list(cls._DATASETS.keys())
+def list_available() -> List[str]:
+    return list(_DATASETS.keys())
+
+def to_Dataframe(df: pd.DataFrame, name: str = "") -> 'Dataframe':
+    return Dataframe(data=df, name=name)
