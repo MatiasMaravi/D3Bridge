@@ -15,10 +15,10 @@ class Dataframe:
         return self._data.to_dict(orient="records")
     
     @data.setter
-    def data(self, value: List[Dict[str, Any]]):
-        if not isinstance(value, list):
-            raise ValueError("data debe ser una lista de diccionarios")
-        self._data = pd.DataFrame(value)
+    def data(self, value: pd.DataFrame):
+        if not isinstance(value, pd.DataFrame):
+            raise ValueError("data debe ser un DataFrame de pandas")
+        self._data = value
         # Actualizar columnas automáticamente al cambiar los datos
         if not self._data.empty:
             self.columns = list(self._data.columns)

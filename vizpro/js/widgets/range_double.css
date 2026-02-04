@@ -1,0 +1,112 @@
+/* Contenedor principal */
+.vp-range-double-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #1b1e23;
+}
+
+/* Formulario */
+.vp-range-double-form {
+  display: flex;
+  align-items: center;
+}
+
+/* Etiqueta */
+.vp-range-double-label {
+  width: 60px;
+  padding-right: 10px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Contenedor del slider */
+.vp-range-double-slider {
+  position: relative;
+  height: 30px;
+  display: grid;
+  align-items: center;
+}
+
+/* Track de fondo (gris) */
+.vp-range-double-track-bg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  z-index: 0;
+}
+
+/* Track fill (barra activa azul) */
+.vp-range-double-track-fill {
+  grid-area: 1 / 1;
+  height: 4px;
+  background: #4269d0;
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Inputs range */
+.vp-range-double-input {
+  grid-area: 1 / 1;
+  width: 100%;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
+  height: 100%;
+}
+
+/* Estilo del Thumb (Círculo) - WebKit */
+.vp-range-double-input::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #888;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  margin-top: -1px;
+}
+
+.vp-range-double-input::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  border-color: #4269d0;
+  transform: scale(1.1);
+}
+
+/* Estilo del Thumb - Firefox */
+.vp-range-double-input::-moz-range-thumb {
+  pointer-events: auto;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #888;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+}
+
+.vp-range-double-input::-moz-range-thumb:active {
+  cursor: grabbing;
+  border-color: #4269d0;
+  transform: scale(1.1);
+}
+
+/* Ocultar el track nativo en Firefox */
+.vp-range-double-input::-moz-range-track {
+  background: transparent;
+}
+
+/* Output */
+.vp-range-double-output {
+  margin-left: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #444;
+  min-width: 60px;
+}

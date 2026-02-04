@@ -371,3 +371,74 @@ class SwatchesInput(anywidget.AnyWidget):
 
     # Guardamos el NOMBRE para saber cual resaltar en la UI
     palette_name = traitlets.Unicode(allow_none=True).tag(sync=True)
+
+
+class RangeDoubleInput(anywidget.AnyWidget):
+    """
+    Widget de slider doble para seleccionar un rango de valores.
+    Permite seleccionar un valor mínimo y máximo dentro de un rango definido.
+    
+    Attributes:
+        value (list): Lista con dos valores [min_seleccionado, max_seleccionado].
+        min (float): Valor mínimo del rango.
+        max (float): Valor máximo del rango.
+        step (float): Incremento del slider.
+        label (str): Etiqueta del widget.
+        width (int): Ancho del slider en píxeles.
+    
+    Ejemplo:
+        slider = RangeDoubleInput(min=0, max=100, value=[20, 80], label="Rango")
+        display(slider)
+        print(slider.value)  # [20, 80]
+    """
+    _esm = pathlib.Path(__file__).parent / "static" / "widgets" / "range_double.js"
+    _css = pathlib.Path(__file__).parent / "static" / "widgets" / "range_double.css"
+    
+    # Valor actual: [min_seleccionado, max_seleccionado]
+    fromValue = traitlets.Float(0).tag(sync=True)
+    toValue = traitlets.Float(100).tag(sync=True)
+    
+    # Configuración del rango
+    min = traitlets.Float(0).tag(sync=True)
+    max = traitlets.Float(100).tag(sync=True)
+    step = traitlets.Float(1).tag(sync=True)
+    
+    # Etiqueta y ancho
+    label = traitlets.Unicode("").tag(sync=True)
+    width = traitlets.Int(240).tag(sync=True)
+    
+    def __init__(self, min: float = 0, max: float = 100, step: float = 1,
+                 fromValue: float = None, toValue: float = None, label: str = "", width: int = 240, **kwargs):
+        """
+        Args:
+            min (float, optional): Valor mínimo del rango. Por defecto 0.
+            max (float, optional): Valor máximo del rango. Por defecto 100.
+            step (float, optional): Incremento. Por defecto 1.
+            fromValue (float, optional): Valor inicial mínimo seleccionado.
+            toValue (float, optional): Valor inicial máximo seleccionado.
+            label (str, optional): Etiqueta del slider.
+            width (int, optional): Ancho en píxeles. Por defecto 240.
+        """
+        super().__init__(**kwargs)
+        self.min = min
+        self.max = max
+        self.step = step
+        self.label = label
+        self.width = width
+        # Valor por defecto si no se proporciona
+        self.fromValue = fromValue if fromValue is not None else min
+        self.toValue = toValue if toValue is not None else max
+    
+    @traitlets.validate('fromValue')
+    def _validate_from_value(self, proposal):
+        """Valida que fromValue esté dentro de los límites [min, max]."""
+        value = proposal['value']
+        return max(self.min, min(self.max, value))
+    
+    @traitlets.validate('toValue')
+    def _validate_to_value(self, proposal):
+        """Valida que toValue esté dentro de los límites [min, max]."""
+        value = proposal['value']
+        return max(self.min, min(self.max, value))
+    def on_drag(self, callback):
+        self.observe(callback, names=["fromValue", "toValue"])
