@@ -38,12 +38,12 @@ function render({ model, el }) {
         element.innerHTML = "";
 
 					const data = model.get("data");
-					const x_ = model.get("x_");
-					const y_ = model.get("y_");
-					const pallete = model.get("pallete");
+					const x = model.get("x");
+					const y = model.get("y");
+					const hue = model.get("hue");
 
 
-        plot(data, x_, y_, pallete);
+        plot(data, x, y, hue);
     }
 
     function initializeWidget() {
@@ -57,18 +57,18 @@ function render({ model, el }) {
 
         // Registrar cambios en el modelo
 					model.on("change:data", replot);
-					model.on("change:x_", replot);
-					model.on("change:y_", replot);
-					model.on("change:pallete", replot);
+					model.on("change:x", replot);
+					model.on("change:y", replot);
+					model.on("change:hue", replot);
 
 
         // Renderizar inicialmente
 					const data = model.get("data");
-					const x_ = model.get("x_");
-					const y_ = model.get("y_");
-					const pallete = model.get("pallete");
+					const x = model.get("x");
+					const y = model.get("y");
+					const hue = model.get("hue");
 
-        plot(data, x_, y_, pallete);
+        plot(data, x, y, hue);
     }
 
     // Usar ResizeObserver solo para detectar cambios de ANCHO
@@ -103,58 +103,291 @@ function render({ model, el }) {
         }
     });
 
-    function plot(data,x_,y_,pallete) {
+    function setValue(text) {
+  model.set({ clickedValue: text });
+  model.save_changes();
+}
 
-  const marginTop = 30;
-  const marginRight = 20;
-  const marginBottom = 30;
-  const marginLeft = 40;
+function setSelectedValues(values) {
+  model.set({ selectedValues: values });
+  model.save_changes();
+}
+
+function plot(data, x_value, y_value, hue) {
+  const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  for (let i = 0; i < data.length; i++) {
+    ("");
+    data[i]["id"] = i;
+  }
+
+  const randomString = Math.floor(Math.random() * Date.now() * 10000).toString(
+    36
+  );
 
   d3.select(element).selectAll("*").remove();
 
-  const x = d3.scaleBand()
-      .domain(d3.groupSort(data, ([d]) => -d[y_], (d) => d[x_]))
-      .range([marginLeft, width - marginRight])
-      .padding(0.1);
-  
-  const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d) => d[y_])])
-      .range([height - marginBottom, marginTop]);
+  const x = d3.scaleLinear().range([0, innerWidth]);
 
+  const y = d3.scaleLinear().range([innerHeight, 0]);
 
-  const svg = d3.select(element)
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto;");
+  const color = d3.scaleOrdinal(d3.schemeCategory10);
 
+  const xAxis = d3.axisBottom(x);
 
-  svg.append("g")
-    .selectAll()
+  const yAxis = d3.axisLeft(y);
+
+  function mouseover(event, d) {
+    focus.style("opacity", 1);
+    focusText.style("opacity", 1);
+    focus.attr("x", event.offsetX - 30).attr("y", event.offsetY - 40);
+    focusText
+      .html(
+        "x: " +
+          Math.round(d[x_value] * 10) / 10 +
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+          "y: " +
+          Math.round(d[y_value] * 10) / 10
+      )
+      .attr("x", event.offsetX - 15)
+      .attr("y", event.offsetY - 20);
+  }
+
+  function mouseout() {
+    focus.style("opacity", 0);
+    focusText.style("opacity", 0);
+  }
+
+  function mouseClick(event, d) {
+    const text =
+      "x:" +
+      Math.round(d[x_value] * 10) / 10 +
+      "    " +
+      "y:" +
+      Math.round(d[y_value] * 10) / 10;
+    if (setValue !== undefined) {
+      setValue(text);
+    }
+  }
+
+  const svg = d3
+    .select(element)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  x.domain(
+    d3.extent(data, function (d) {
+      return d[x_value];
+    })
+  ).nice();
+  y.domain(
+    d3.extent(data, function (d) {
+      return d[y_value];
+    })
+  ).nice();
+
+  svg
+    .append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + innerHeight + ")")
+    .call(xAxis)
+    .append("text")
+    .attr("class", "label")
+    .attr("x", innerWidth)
+    .attr("y", -6)
+    .style("text-anchor", "end");
+
+  svg
+    .append("g")
+    .attr("class", "y axis")
+    .call(yAxis)
+    .append("text")
+    .attr("class", "label")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 6)
+    .attr("dy", ".71em")
+    .style("text-anchor", "end");
+
+  svg
+    .selectAll(".customdot")
     .data(data)
-    .join("rect")
-      .attr("x", (d) => x(d[x_]))
-      .attr("y", (d) => y(d[y_]))
-      .attr("height", (d) => y(0) - y(d[y_]))
-      .attr("width", x.bandwidth())
-      .attr("fill", (d, i) => pallete[i % pallete.length]);
+    .enter()
+    .append("circle")
+    .attr("id", function (d, i) {
+      return "dot-" + randomString + d.id;
+    })
+    .attr("class", "customdot")
+    .attr("r", 3.5)
+    .attr("cx", function (d) {
+      return x(d[x_value]);
+    })
+    .attr("cy", function (d) {
+      return y(d[y_value]);
+    })
+    .style("fill", function (d) {
+      return color(d[hue]);
+    })
+    .on("mouseover", mouseover)
+    .on("mouseout", mouseout)
+    .on("click", mouseClick);
 
-  svg.append("g")
-      .attr("transform", `translate(0,${height - marginBottom})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0));
+  function setLassoValues(values) {
+    if (setSelectedValues !== undefined) {
+      setSelectedValues(values);
+    }
+  }
 
+  lasso(
+    element,
+    x,
+    y,
+    x_value,
+    y_value,
+    margin.left,
+    margin.top,
+    setLassoValues,
+    randomString
+  );
 
-  svg.append("g")
-      .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).tickFormat((y) => (y * 100).toFixed()))
-      .call(g => g.select(".domain").remove())
-      .call(g => g.append("text")
-          .attr("x", -marginLeft)
-          .attr("y", 10)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "start")
-          .text("↑ Frequency (%)"));
+  const legend = svg
+    .selectAll(".legend")
+    .data(color.domain())
+    .enter()
+    .append("g")
+    .attr("class", "legend")
+    .attr("transform", function (d, i) {
+      return "translate(0," + i * 20 + ")";
+    });
+
+  legend
+    .append("rect")
+    .attr("x", innerWidth - 18)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", color);
+
+  legend
+    .append("text")
+    .attr("x", innerWidth - 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text(function (d) {
+      return d;
+    });
+
+  const focus = svg
+    .append("g")
+    .append("rect")
+    .style("fill", "none")
+    .attr("width", 160)
+    .attr("height", 40)
+    .attr("stroke", "#69b3a2")
+    .attr("stroke-width", 4)
+    .style("opacity", 0);
+
+  const focusText = svg
+    .append("g")
+    .append("text")
+    .style("opacity", 0)
+    .attr("text-anchor", "left")
+    .attr("alignment-baseline", "middle");
+}
+
+function lasso(
+  element,
+  xScale,
+  yScale,
+  x_value,
+  y_value,
+  x_translate,
+  y_translate,
+  setLassoValues,
+  randomString
+) {
+  // const PATH_COLOR = "black"
+  // const PATH_BACKGROUND_COLOR = "#00000054"
+  const PATH_COLOR = "blue";
+  const PATH_BACKGROUND_COLOR = "#00008854";
+  const SELECTED_DOTS_COLOR = "red";
+
+  let coords = [];
+  const lineGenerator = d3.line();
+
+  const pointInPolygon = function (point, vs) {
+    var x = point[0],
+      y = point[1];
+
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      var xi = vs[i][0],
+        yi = vs[i][1];
+      var xj = vs[j][0],
+        yj = vs[j][1];
+
+      var intersect =
+        yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  };
+
+  const circles = d3.select(element).selectAll(".customdot");
+
+  function drawPath() {
+    d3.select("#lasso" + randomString)
+      .style("stroke", PATH_COLOR)
+      .style("stroke-width", 2)
+      .style("fill", PATH_BACKGROUND_COLOR)
+      .attr("d", lineGenerator(coords));
+  }
+
+  function dragStart() {
+    coords = [];
+    d3.select(element)
+      .select("svg")
+      .append("path")
+      .attr("id", "lasso" + randomString);
+  }
+
+  function dragMove(event) {
+    let mouseX = event.sourceEvent.offsetX;
+    let mouseY = event.sourceEvent.offsetY;
+    coords.push([mouseX, mouseY]);
+    drawPath();
+  }
+
+  function dragEnd() {
+    let selectedDots = [];
+    circles.each((d, i) => {
+      let point = [
+        xScale(d[x_value]) + x_translate,
+        yScale(d[y_value]) + y_translate,
+      ];
+      if (pointInPolygon(point, coords)) {
+        d3.select("#dot-" + randomString + d.id).classed("selected", true);
+        selectedDots.push(d);
+      } else {
+        d3.select("#dot-" + randomString + d.id).classed("selected", false);
+      }
+    });
+    d3.select("#lasso" + randomString).remove();
+    setLassoValues(selectedDots);
+  }
+
+  const drag = d3
+    .drag()
+    .on("start", dragStart)
+    .on("drag", dragMove)
+    .on("end", dragEnd);
+
+  d3.select(element).call(drag);
 }
 }
 
