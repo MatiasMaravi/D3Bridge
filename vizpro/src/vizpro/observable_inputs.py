@@ -371,6 +371,37 @@ class SwatchesInput(anywidget.AnyWidget):
 
     # Guardamos el NOMBRE para saber cual resaltar en la UI
     palette_name = traitlets.Unicode(allow_none=True).tag(sync=True)
+    
+    def on_change(self, callback):
+        """Escucha cambios en la paleta seleccionada (value o palette_name).
+        
+        Args:
+            callback: Función que recibe el objeto change con keys 'name', 'old', 'new'.
+        
+        Ejemplo:
+            def on_palette_change(change):
+                print(f"Nueva paleta: {swatch.palette_name}")
+                print(f"Colores: {swatch.value}")
+            
+            swatch.on_change(on_palette_change)
+        """
+        self.observe(callback, names=["value", "palette_name"])
+    
+    def on_value_change(self, callback):
+        """Escucha cambios solo en la lista de colores (value).
+        
+        Args:
+            callback: Función que recibe el objeto change.
+        """
+        self.observe(callback, names=["value"])
+    
+    def on_palette_change(self, callback):
+        """Escucha cambios solo en el nombre de la paleta (palette_name).
+        
+        Args:
+            callback: Función que recibe el objeto change.
+        """
+        self.observe(callback, names=["palette_name"])
 
 
 class RangeDoubleInput(anywidget.AnyWidget):

@@ -114,4 +114,28 @@ export const render: Render = ({ model, el }) => {
      const firstRow = grid.children[0] as HTMLDivElement;
      selectPalette(firstRow, first.name, first.scheme);
   }
+
+  // 6. Escuchar cambios desde Python (sincronización bidireccional)
+  model.on("change:palette_name", () => {
+    const newPaletteName = model.get("palette_name");
+    
+    // Buscar la paleta correspondiente y actualizar la UI
+    PALETTES.forEach((palette, index) => {
+      if (palette.name === newPaletteName) {
+        const row = grid.children[index] as HTMLDivElement;
+        
+        // Solo actualizar UI si es diferente a la selección actual
+        if (selectedRow !== row) {
+          // Quitar selección anterior
+          if (selectedRow) {
+            selectedRow.classList.remove("vp-swatches-row--selected");
+          }
+          
+          // Agregar selección nueva
+          selectedRow = row;
+          selectedRow.classList.add("vp-swatches-row--selected");
+        }
+      }
+    });
+  });
 };
