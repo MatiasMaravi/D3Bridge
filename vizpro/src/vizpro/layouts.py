@@ -6,21 +6,6 @@ import anywidget
 import traitlets
 import ipywidgets
 
-def anywidget_to_json(widget):
-    """Convierte un widget de ipywidgets a un formato JSON compatible con AnyWidget.
-
-    Args:
-        widget (ipywidgets.Widget): El widget a convertir.
-
-    Returns:
-        dict: Un diccionario JSON con la información del widget.
-    """
-    return {
-        "model_id": widget.model_id,
-        "type": type(widget).__name__,
-        "state": widget.get_state(),
-    }
-
 
 class MatrixLayout(anywidget.AnyWidget):
     _esm = pathlib.Path(__file__).parent / "static" / "layouts" / "matrix_layout.js"
