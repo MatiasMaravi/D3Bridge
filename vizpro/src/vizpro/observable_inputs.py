@@ -436,7 +436,6 @@ class RangeDoubleInput(anywidget.AnyWidget):
     
     # Etiqueta y ancho
     label = traitlets.Unicode("").tag(sync=True)
-    width = traitlets.Int(240).tag(sync=True)
     
     def __init__(self, min: float = 0, max: float = 100, step: float = 1,
                  fromValue: float = None, toValue: float = None, label: str = "", width: int = 240, **kwargs):
@@ -455,7 +454,6 @@ class RangeDoubleInput(anywidget.AnyWidget):
         self.max = max
         self.step = step
         self.label = label
-        self.width = width
         # Valor por defecto si no se proporciona
         self.fromValue = fromValue if fromValue is not None else min
         self.toValue = toValue if toValue is not None else max

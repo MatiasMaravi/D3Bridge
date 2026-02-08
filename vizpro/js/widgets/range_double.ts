@@ -1,7 +1,17 @@
-import type { Render } from "@anywidget/types";
+import type { RenderProps } from "@anywidget/types";
 import "./range_double.css";
 
-export const render: Render = ({ model, el }) => {
+interface RangeDoubleModel {
+  min: number;
+  max: number;
+  step: number;
+  fromValue: number;
+  toValue: number;
+  //Opcional
+  label?: string;
+}
+
+function render({ model, el }: RenderProps<RangeDoubleModel>) {
   // 1. Leer configuración del modelo de Python (con valores por defecto)
   const min = model.get("min") ?? 0;
   const max = model.get("max") ?? 100;
@@ -9,7 +19,7 @@ export const render: Render = ({ model, el }) => {
   const initialValueFrom: number = model.get("fromValue") ?? min;
   const initialValueTo: number = model.get("toValue") ?? max;
   const label: string = model.get("label") ?? "";
-  const widthSlider = model.get("width") ?? 240;
+  const widthSlider = 240; // Ancho fijo del slider en píxeles
 
   // 2. Crear contenedor principal
   el.classList.add("vp-range-double-container");
@@ -173,4 +183,6 @@ export const render: Render = ({ model, el }) => {
 
   // 10. Inicialización
   update();
-};
+}
+
+export default {render};

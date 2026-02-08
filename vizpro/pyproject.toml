@@ -29,14 +29,14 @@ build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
     "src/vizpro/static/layouts/matrix_creator.js",
     "src/vizpro/static/layouts/matrix_layout.js",
-    "src/vizpro/static/widgets/button.js",
-    "src/vizpro/static/widgets/checkbox.js"
+    "src/vizpro/static/widgets/range_double.js",
+    "src/vizpro/static/widgets/swatches.js"
 ]
 skip-if-exists = [
     "src/vizpro/static/layouts/matrix_creator.js",
     "src/vizpro/static/layouts/matrix_layout.js",
-    "src/vizpro/static/widgets/button.js",
-    "src/vizpro/static/widgets/checkbox.js"
+    "src/vizpro/static/widgets/range_double.js",
+    "src/vizpro/static/widgets/swatches.js"
 ]
 dependencies = ["hatch-jupyter-builder>=0.5.0"]
 

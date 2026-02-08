@@ -1,5 +1,12 @@
-import type { Render } from "@anywidget/types";
+import type { RenderProps } from "@anywidget/types";
 import "./layouts.css";
+
+interface MatrixCreatorModel {
+    rows: string; // Número de filas (como string para facilitar la entrada en Python)
+    columns: string; // Número de columnas (como string para facilitar la entrada en Python)
+    matrix: number[][]; // Matriz actual con números de grupo (0 para sin grupo, 1-9 para grupos)
+}
+
 class MatrixCreator {
     private el: HTMLElement;
     private model: any;
@@ -441,9 +448,10 @@ class MatrixCreator {
         this.el.appendChild(node);
     }
 }
-
-export const render: Render = ({ model, el }) => {
+function render({ model, el }: RenderProps<MatrixCreatorModel>) {
     const widget = new MatrixCreator(el, model);
     widget.render();
     return () => widget.dispose();
-};
+}
+
+export default { render };

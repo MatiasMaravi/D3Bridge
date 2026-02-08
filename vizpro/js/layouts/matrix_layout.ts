@@ -1,18 +1,14 @@
-import type { Render } from "@anywidget/types";
+import type { RenderProps} from "@anywidget/types";
 import "./layouts.css";
 
-// Helper para extraer ID de modelos IPY Widgets (vienen como strings "IPY_MODEL_..." o objetos)
-function extractModelId(item: any): string | null {
-    if (typeof item === "string") {
-        return item.replace("IPY_MODEL_", "");
-    }
-    if (item && typeof item === "object" && "model_id" in item) {
-        return item.model_id;
-    }
-    return null;
+interface MatrixLayoutModel {
+    grid_template_areas: string;
+    widget_areas: Record<string, string>;
+    style: string;
+    children: any[];
 }
 
-const render: Render = ({ model, el }) => {
+async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
     const gridContainer = document.createElement("div");
     gridContainer.style.display = "grid";
     gridContainer.style.height = "100%";
@@ -32,64 +28,33 @@ const render: Render = ({ model, el }) => {
 
     el.appendChild(gridContainer);
     
-    // Cache de vistas para no regenerarlas
-    const childViews = new Map<string, any>();
-    
-    // --- CORRECCIÓN: Definir wrapperRefs aquí ---
-    const wrapperRefs = new Map<string, HTMLElement>();
 
     async function updateLayout() {
+        // Limpiar el contenedor antes de renderizar para evitar duplicados
+        gridContainer.innerHTML = "";
+        
         gridContainer.style.gridTemplateAreas = model.get("grid_template_areas");
 
         const children = model.get("children") || [];
         const widgetAreas = model.get("widget_areas") || {};
-        const currentIds = new Set<string>();
-
-        // 1. Crear/Actualizar vistas
-        for (const child of children) {
-            const modelId = extractModelId(child);
-            if (!modelId) continue;
-            
-            currentIds.add(modelId);
-            
-            let wrapper = gridContainer.querySelector(`[data-widget-id="${modelId}"]`) as HTMLElement;
+        
+        // Crear array de promesas para renderizar en paralelo
+        const promises = children.map(async (child: any) => {
+            const modelId = child.slice("IPY_MODEL_".length);
             const areaName = widgetAreas[modelId];
 
-            if (!wrapper) {
-                // Nuevo widget
-                wrapper = document.createElement("div");
-                wrapper.classList.add("vp-dashboard-div"); 
-                wrapper.dataset.widgetId = modelId;
+            // Nuevo widget
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("vp-dashboard-div"); 
+            wrapper.dataset.widgetId = modelId;
+            
+            wrapper.style.minHeight = "0"; 
+            wrapper.style.minWidth = "0";
                 
-                wrapper.style.minHeight = "0"; 
-                wrapper.style.minWidth = "0";
-                    
-                wrapper.style.height = "100%";
-                wrapper.style.width = "100%";
+            wrapper.style.height = "100%";
+            wrapper.style.width = "100%";
 
-                wrapper.style.overflow = "hidden"; 
-                gridContainer.appendChild(wrapper);
-                
-                // --- CORRECCIÓN: Guardar referencia ---
-                wrapperRefs.set(modelId, wrapper);
-
-                try {
-                    // Usar el widget manager del modelo anywidget
-                    const childModel = await model.widget_manager.get_model(modelId);
-                    
-                    if (childModel) {
-                        const view = await model.widget_manager.create_view(childModel);
-                        childViews.set(modelId, view);
-                        wrapper.appendChild(view.el);
-                        
-                        // NOTA: Se han eliminado los listeners manuales de 'change' y 'click' (Reverse Bridge).
-                        // El widget hijo (Checkbox) ya tiene su propia lógica para actualizar el modelo
-                        // (model.save_changes). Tenerlos aquí duplicaba las peticiones al backend.
-                    }
-                } catch (err) {
-                    console.error("Error creating view for", modelId, err);
-                }
-            }
+            wrapper.style.overflow = "hidden"; 
             
             // Asignar al grid-area correspondiente
             if (areaName) {
@@ -98,56 +63,26 @@ const render: Render = ({ model, el }) => {
             } else {
                 wrapper.style.display = "none";
             }
-        }
 
-        // 2. Limpiar vistas antiguas
-        for (const [id, view] of childViews.entries()) {
-            if (!currentIds.has(id)) {
-                // Remover del DOM
-                const wrapper = gridContainer.querySelector(`[data-widget-id="${id}"]`);
-                if (wrapper) wrapper.remove();
-                
-                // Limpiar referencia de Backbone/Jupyter
-                view.remove();
-                childViews.delete(id);
-                // --- CORRECCIÓN: Limpiar referencia ---
-                wrapperRefs.delete(id);
+            // Agregar al DOM inmediatamente (sincrónico) para mantener el orden
+            gridContainer.appendChild(wrapper);
+
+            try {
+                // Usar el widget manager del modelo anywidget (Asíncrono)
+                const childModel = await model.widget_manager.get_model(modelId);
+                console.log("Creating view for", modelId, childModel);
+                if (childModel) {
+                    const view = await model.widget_manager.create_view(childModel);
+                    wrapper.appendChild(view.el);
+                }
+            } catch (err) {
+                console.error("Error creating view for", modelId, err);
             }
-        }
+        });
+
+        // Esperar a que todas las vistas se carguen
+        await Promise.all(promises);
     }
-    
-    // Función para aplicar cambios recibidos por mensaje custom
-    function applyCustomUpdate(modelId: string, trait: string, value: any) {
-        const wrapper = wrapperRefs.get(modelId);
-        if (!wrapper) return;
-
-        // Logs opcionales
-        console.log(`[MatrixLayout Bridge] Update received:`, modelId, trait, value);
-
-        if (trait === "checked") {
-            const checkbox = wrapper.querySelector('input[type="checkbox"]') as HTMLInputElement;
-            // Verificación crítica para evitar bucles con el send_state de Python
-            if (checkbox && checkbox.checked !== value) {
-                checkbox.checked = value;
-            }
-        } else if (trait === "description") {
-            const label = wrapper.querySelector('.vp_checkbox_label');
-            if (label) label.textContent = value;
-            
-            const button = wrapper.querySelector('.vp_button'); // Ajustado para buscar mejor
-            if (button) button.textContent = value;
-        } else if (trait === "disabled") {
-            const el = wrapper.querySelector('input, button') as HTMLInputElement;
-            if (el) el.disabled = value;
-        }
-    }
-
-    // Suscribirse al canal de mensajes personalizados (El "Puente")
-    model.on("msg:custom", (msg: any) => {
-        if (msg.type === "child_change") {
-            applyCustomUpdate(msg.model_id, msg.trait, msg.value);
-        }
-    });
 
     // Suscripciones
     model.on("change:children", updateLayout);
@@ -159,16 +94,11 @@ const render: Render = ({ model, el }) => {
     
     // Render inicial
     updateStyle();
-    updateLayout();
+    await updateLayout();
 
     return () => {
-        // Cleanup al destruir el widget
-        for (const view of childViews.values()) {
-            view.remove();
-        }
         gridContainer.remove();
-        wrapperRefs.clear();
     };
-};
+}
 
 export default { render };

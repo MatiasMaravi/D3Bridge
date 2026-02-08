@@ -115,7 +115,8 @@ _DATASETS = {
         "alphabet": "alphabet.csv",
         "sales": "sales.csv",
         "state-population-2010-2019": "state-population-2010-2019.tsv",
-        "affairs": "affairs.csv"
+        "affairs": "affairs.csv",
+        "iris": "iris.csv"
     }    
 _BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
 def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference

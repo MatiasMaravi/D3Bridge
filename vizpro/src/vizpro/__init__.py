@@ -10,3 +10,4 @@ from .layouts import *
 from .custom import *
 from .observable_inputs import *
 from .datasets import *
+from .graphs import *
