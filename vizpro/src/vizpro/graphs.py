@@ -14,11 +14,12 @@ class Barplot(anywidget.AnyWidget):
     palette = traitlets.List([]).tag(sync=True)
     data = traitlets.List([]).tag(sync=True)
 
-    def __init__(self, x, y, hue, direction, palette, data, **kwargs):
+    def __init__(self, data, x, y, hue="", direction="vertical", palette=[], **kwargs):
         super().__init__(**kwargs)
+        self.data = data
         self.x = x
         self.y = y
-        self.hue = hue
+        self.hue = hue #Javascript maneja el nulo
         self.direction = direction
-        self.palette = palette
-        self.data = data
+        self.palette = palette #Javascript maneja el nulo
+    
