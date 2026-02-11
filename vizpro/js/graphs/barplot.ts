@@ -50,7 +50,7 @@ class BarPlot {
         
         // Dimensiones iniciales (se actualizarán con el ResizeObserver)
         this.width = this.el.clientWidth || DEFAULT_WIDTH;
-        this.height = this.el.clientHeight || DEFAULT_HEIGHT;
+        this.height = DEFAULT_HEIGHT;
         this.innerWidth = this.width - MARGIN.left - MARGIN.right;
         this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
 
