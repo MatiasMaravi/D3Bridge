@@ -120,6 +120,10 @@ class Decision {
 
         return [min, max];
     }
+    private set_selected_values(values: number[]) {
+        this.model.set("selected_values_records", values);
+        this.model.save_changes();
+    }
     private get_color(value:number):string{
         return [
             "rgb(",
@@ -234,8 +238,23 @@ class Decision {
                     [x_scale(0), y_scale(lastFeature)!]
                 ]));
         }
+        
+
         const allPaths: any[] = [];
         const selectedPaths: any[] = [];
+
+        const callUpdateSelected = (indexes: number[]) => {
+            allPaths.forEach((path) => path.classed("selected",indexes.includes(path.data()[0][0].index)));
+            const filteredData:any[] = this.data.map((d) => {
+                return {
+                    "feature_names": d["feature_names"],
+                    "values": indexes.map((i) => d["values"][i]),
+                    "data": indexes.map((i) => d["data"][i]),
+                    "base_values": this.base_value
+                }
+            });
+            this.set_selected_values(filteredData);
+        }
 
         const addPath = (d: any, i: number) => {
             let path_point = this.base_value;
@@ -274,6 +293,10 @@ class Decision {
                 [x_scale.range()[1], y_scale(d["feature_names"])!]
             ]));
         
+        const PathClick = (event: any, d: any) => {
+            selectedPaths.push(d[0].index);
+            callUpdateSelected(selectedPaths);
+        }
         allPaths.forEach((path) => path.on("click",PathClick).attr("cursor", "pointer"));
     }
 }
