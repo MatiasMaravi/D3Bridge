@@ -6,15 +6,16 @@
     transition: opacity 0.2s ease;
 }
 
-.bar:hover {
-    opacity: 0.8;
-    cursor: pointer;
-}
 
-.x-axis text,
+.x-axis text {
+    font-size: 12px;
+    fill : #333;
+    text-anchor: end;
+}
 .y-axis text {
     font-size: 12px;
     fill: #333;
+    text-anchor: end;
 }
 
 .x-axis path,
@@ -29,6 +30,11 @@
     font-size: 13px;
     font-weight: 500;
     fill: #333;
+    text-anchor: middle;
+}
+
+.domain {
+    stroke: #999;
 }
 
 .legend text {
