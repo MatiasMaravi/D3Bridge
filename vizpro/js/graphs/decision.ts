@@ -116,7 +116,7 @@ class Decision extends ShapPlot {
             .enter()
             .append("stop")
             .style("stop-color", (d) => `rgb(${d.r},${d.g},${d.b})`)
-            .attr("offset", (d, i) => `${(i / (colors.length - 1)) * 100}%`);
+            .attr("offset", (_d, i) => `${(i / (colors.length - 1)) * 100}%`);
 
         g.append("rect")
             .attr("x", x_scale.range()[0])

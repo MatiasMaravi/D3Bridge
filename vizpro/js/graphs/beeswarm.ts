@@ -28,6 +28,8 @@ interface BeeswarmPathDatum {
 class BeesWarm extends ShapPlot {
     public render() {
         d3.select(this.el).selectAll("*").remove();
+        this.all_paths = [];
+        this.selected_paths = [];
 
         const data = this.model.get("data");
         const base_value = this.model.get("base_value");
@@ -238,7 +240,7 @@ class BeesWarm extends ShapPlot {
             .enter()
             .append("stop")
             .style("stop-color", (d) => `rgb(${d.r},${d.g},${d.b})`)
-            .attr("offset", (d, i) => `${(i / (colors.length - 1)) * 100}%`);
+            .attr("offset", (_d, i) => `${(i / (colors.length - 1)) * 100}%`);
 
         g.append("rect")
             .attr("x", innerWidth + 20)
