@@ -1,0 +1,32 @@
+.histogramplot-svg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.histogram-bars .bar {
+    transition: opacity 0.2s ease, fill 0.2s ease;
+}
+
+.histogram-bars .bar:hover {
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.x-axis text,
+.y-axis text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.x-axis path,
+.x-axis line,
+.y-axis path,
+.y-axis line {
+    stroke: #999;
+}
+
+.x-label,
+.y-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: #333;
+}

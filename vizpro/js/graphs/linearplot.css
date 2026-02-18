@@ -1,0 +1,69 @@
+.linearplot-svg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.line-path {
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transition: stroke-width 0.2s ease;
+}
+
+.line-path:hover {
+    stroke-width: 3;
+    cursor: pointer;
+}
+
+.line-dot {
+    transition: opacity 0.2s ease, r 0.2s ease;
+    cursor: pointer;
+}
+
+.line-dot:hover {
+    opacity: 1 !important;
+}
+
+.line-dot.selected {
+    stroke: #333;
+    stroke-width: 2;
+    opacity: 1 !important;
+}
+
+.x-axis text,
+.y-axis text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.x-axis path,
+.x-axis line,
+.y-axis path,
+.y-axis line {
+    stroke: #999;
+}
+
+.x-label,
+.y-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: #333;
+}
+
+.legend text {
+    fill: #333;
+}
+
+.legend-item {
+    cursor: default;
+}
+
+.linearplot-tooltip {
+    position: absolute;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.2s ease;
+}

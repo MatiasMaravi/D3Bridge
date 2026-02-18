@@ -108,3 +108,91 @@ class DecisionPlot(anywidget.AnyWidget):
     
     def on_selected_values(self, callback):
         self.observe(callback, names="selected_values_records")
+
+class HistogramPlot(anywidget.AnyWidget):
+    _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "histogramplot.js"
+    _css = pathlib.Path(__file__).parent / "static" / "graphs" / "histogramplot.css"
+    
+    x = traitlets.Unicode("").tag(sync=True)
+    data = traitlets.List([]).tag(sync=True)
+    color_ = traitlets.Unicode("").tag(sync=True)
+
+    
+
+    def __init__(self, x, data, color_, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.data = data
+        self.color_ = color_
+
+class LinearPlot(anywidget.AnyWidget):
+    _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "linearplot.js"
+    _css = pathlib.Path(__file__).parent / "static" / "graphs" / "linearplot.css"
+    
+    x = traitlets.Unicode("").tag(sync=True)
+    y = traitlets.Unicode("").tag(sync=True)
+    hue = traitlets.Unicode("").tag(sync=True)
+    palette = traitlets.List([]).tag(sync=True)
+    data = traitlets.List([]).tag(sync=True)
+    selected_values_records = traitlets.List([]).tag(sync=True)
+   
+    def __init__(self, x, y, data, hue="", palette=None, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.y = y
+        self.data = data
+        self.hue = hue
+        self.palette = palette if palette is not None else []
+
+    @property
+    def selected_values(self):
+        if not self.selected_values_records:
+            return None
+        return pd.DataFrame.from_records(self.selected_values_records)
+
+    def on_selected_values(self, callback):
+        self.observe(callback, names="selected_values_records")
+
+class MapPlot(anywidget.AnyWidget):
+    _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "mapplot.js"
+    _css = pathlib.Path(__file__).parent / "static" / "graphs" / "mapplot.css"
+    
+    data = traitlets.List([]).tag(sync=True)
+    geo_data = traitlets.Dict({}).tag(sync=True)
+    selected_values_records = traitlets.List([]).tag(sync=True)
+
+    def __init__(self, data, geo_json_path=None, **kwargs):
+        super().__init__(**kwargs)
+        # Convertir DataFrame a lista de diccionarios si es necesario
+        if isinstance(data, pd.DataFrame):
+            self.data = data.to_dict('records')
+        else:
+            self.data = data
+        
+        # Cargar datos geográficos
+        if geo_json_path is None:
+            # Usar ruta por defecto para Brazil
+            # __file__ es vizpro/src/vizpro/graphs.py
+            # Necesitamos llegar a vizpro/datasets/brazil_geo.json
+            geo_json_path = pathlib.Path(__file__).parent.parent.parent / "datasets" / "brazil_geo.json"
+        
+        try:
+            import json
+            with open(geo_json_path, 'r', encoding='utf-8') as f:
+                self.geo_data = json.load(f)
+                print(f"✓ Archivo GeoJSON cargado: {len(self.geo_data.get('features', []))} estados")
+        except FileNotFoundError:
+            print(f"✗ Advertencia: No se encontró el archivo GeoJSON en {geo_json_path}")
+            self.geo_data = {}
+        except Exception as e:
+            print(f"✗ Error al cargar GeoJSON: {e}")
+            self.geo_data = {}
+
+    @property
+    def selected_values(self):
+        if not self.selected_values_records:
+            return None
+        return pd.DataFrame.from_records(self.selected_values_records)
+
+    def on_selected_values(self, callback):
+        self.observe(callback, names="selected_values_records")
