@@ -117,62 +117,116 @@ _DATASETS = {
         "state-population-2010-2019": "state-population-2010-2019.tsv",
         "affairs": "affairs.csv",
         "iris": "iris.csv"
-    }    
+    }
+_GEO_DATASETS = {
+    "Brazil":"brazil_geo.json",
+    "USA": "states-albers-10m.json",
+    "sample": "sample.json"
+}
 _BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
 def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference
-        """Carga un dataset interno (archivo local o URL) por su nombre."""
-        if name not in _DATASETS:
-            options = ", ".join(_DATASETS.keys())
-            raise ValueError(f"Dataset '{name}' no encontrado. Disponibles: {options}")
+    """Carga un dataset interno (archivo local o URL) por su nombre."""
+    if name not in _DATASETS:
+        options = ", ".join(_DATASETS.keys())
+        raise ValueError(f"Dataset '{name}' no encontrado. Disponibles: {options}")
 
-        source = _DATASETS[name]
-        
+    source = _DATASETS[name]
+    
+    # --- LÓGICA HÍBRIDA (URL vs LOCAL) ---
+    if source.startswith(("http://", "https://")):
+        # Si es URL, pasamos la cadena tal cual
+        file_path = source
+    else:
+        # Si es local, construimos la ruta absoluta
+        file_path = _BASE_PATH / source
+    
+    df = read_dataset(file_path)
+    df.name = name
+    return df
+
+def get_geo_dataset(name: str) -> Dict[str, Any]:
+    """Carga un dataset geográfico interno (archivo local o URL) por su nombre."""
+    if name not in _GEO_DATASETS:
+        options = ", ".join(_GEO_DATASETS.keys())
+        raise ValueError(f"Dataset geográfico '{name}' no encontrado. Disponibles: {options}")
+    source = _GEO_DATASETS[name]
         # --- LÓGICA HÍBRIDA (URL vs LOCAL) ---
-        if source.startswith(("http://", "https://")):
-            # Si es URL, pasamos la cadena tal cual
-            file_path = source
-        else:
-            # Si es local, construimos la ruta absoluta
-            file_path = _BASE_PATH / source
-        
-        df = read_dataset(file_path)
-        df.name = name
-        return df
+    if source.startswith(("http://", "https://")):
+        # Si es URL, pasamos la cadena tal cual
+        file_path = source
+    else:
+        # Si es local, construimos la ruta absoluta
+        file_path = _BASE_PATH / source
+    geojson_data = read_geojson(file_path)
+    return geojson_data
+
 def read_dataset(file_path: str | Path, sep: Optional[str] = None) -> 'Dataframe':
-        """Lee un archivo local O una URL y devuelve un objeto Dataframe."""
+    """Lee un archivo local O una URL y devuelve un objeto Dataframe."""
+    
+    # Convertimos a string para verificar si es URL
+    path_str = str(file_path)
+    is_url = path_str.startswith(("http://", "https://"))
+    
+    # Objeto Path para utilidades (extraer extensión o nombre), 
+    # aunque no exista en disco local.
+    # Nota: Path(url).stem funciona bien para extraer el nombre del archivo de la URL
+    path_obj = Path(file_path) if not is_url else Path(path_str.split("?")[0]) 
+
+    # 1. Validación de existencia (SOLO SI ES LOCAL)
+    if not is_url and not path_obj.exists():
+        raise FileNotFoundError(f"El archivo no existe: {path_obj}")
+
+    # 2. Inferencia automática del separador
+    if sep is None:
+        # Funciona tanto para path local como para URL (ej: archivo.tsv)
+        sep = "\t" if path_obj.suffix == ".tsv" else ","
+
+    try:
+        # 3. Lectura con Pandas (Pandas maneja URLs nativamente)
+        # storage_options={'User-Agent': ...} a veces ayuda con bloqueos de github/gists, 
+        # pero para raw gists suele funcionar directo.
+        pd_df = pd.read_csv(path_str, sep=sep)
         
-        # Convertimos a string para verificar si es URL
-        path_str = str(file_path)
-        is_url = path_str.startswith(("http://", "https://"))
+        return Dataframe(data=pd_df, name=path_obj.stem)
         
-        # Objeto Path para utilidades (extraer extensión o nombre), 
-        # aunque no exista en disco local.
-        # Nota: Path(url).stem funciona bien para extraer el nombre del archivo de la URL
-        path_obj = Path(file_path) if not is_url else Path(path_str.split("?")[0]) 
+    except Exception as e:
+        msg = "descargar la URL" if is_url else "leer el archivo"
+        raise RuntimeError(f"Error al {msg}: {e}")
 
-        # 1. Validación de existencia (SOLO SI ES LOCAL)
-        if not is_url and not path_obj.exists():
-            raise FileNotFoundError(f"El archivo no existe: {path_obj}")
+def read_geojson(file_path: str | Path) -> Dict[str, Any]:
+    """Lee un archivo GeoJSON local o una URL y devuelve su contenido como diccionario."""
+    # Convertimos a string para verificar si es URL
+    path_str = str(file_path)
+    is_url = path_str.startswith(("http://", "https://"))
+    
+    # Objeto Path para utilidades (extraer extensión o nombre), 
+    # aunque no exista en disco local.
+    path_obj = Path(file_path) if not is_url else Path(path_str.split("?")[0]) 
 
-        # 2. Inferencia automática del separador
-        if sep is None:
-            # Funciona tanto para path local como para URL (ej: archivo.tsv)
-            sep = "\t" if path_obj.suffix == ".tsv" else ","
+    # Validación de existencia (SOLO SI ES LOCAL)
+    if not is_url and not path_obj.exists():
+        raise FileNotFoundError(f"El archivo no existe: {path_obj}")
 
-        try:
-            # 3. Lectura con Pandas (Pandas maneja URLs nativamente)
-            # storage_options={'User-Agent': ...} a veces ayuda con bloqueos de github/gists, 
-            # pero para raw gists suele funcionar directo.
-            pd_df = pd.read_csv(path_str, sep=sep)
+    try:
+        # Pandas no tiene un método directo para GeoJSON, así que usamos json estándar
+        import json
+        if is_url:
+            import requests
+            response = requests.get(path_str)
+            response.raise_for_status()  # Verificar que la solicitud fue exitosa
+            geojson_data = response.json()
+        else:
+            with open(path_obj, 'r', encoding='utf-8') as f:
+                geojson_data = json.load(f)
+        
+        return geojson_data
             
-            return Dataframe(data=pd_df, name=path_obj.stem)
-            
-        except Exception as e:
-            msg = "descargar la URL" if is_url else "leer el archivo"
-            raise RuntimeError(f"Error al {msg}: {e}")
-
+    except Exception as e:
+        msg = "descargar la URL" if is_url else "leer el archivo"
+        raise RuntimeError(f"Error al {msg}: {e}")
 def list_available() -> List[str]:
-    return list(_DATASETS.keys())
+    """Devuelve una lista de los nombres de los datasets disponibles."""
+    return list(_DATASETS.keys()) + list(_GEO_DATASETS.keys())
 
 def to_Dataframe(df: pd.DataFrame, name: str = "") -> 'Dataframe':
     return Dataframe(data=df, name=name)

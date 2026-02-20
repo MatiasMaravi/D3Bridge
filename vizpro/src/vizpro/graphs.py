@@ -153,46 +153,19 @@ class LinearPlot(anywidget.AnyWidget):
     def on_selected_values(self, callback):
         self.observe(callback, names="selected_values_records")
 
-class MapPlot(anywidget.AnyWidget):
-    _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "mapplot.js"
-    _css = pathlib.Path(__file__).parent / "static" / "graphs" / "mapplot.css"
+class GeoMapPlot(anywidget.AnyWidget):
+    _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "geomapplot.js"
+    _css = pathlib.Path(__file__).parent / "static" / "graphs" / "geomapplot.css"
     
-    data = traitlets.List([]).tag(sync=True)
-    geo_data = traitlets.Dict({}).tag(sync=True)
-    selected_values_records = traitlets.List([]).tag(sync=True)
+    geojson = traitlets.Dict({}).tag(sync=True)
+    config = traitlets.Dict({}).tag(sync=True)
+    selected_region = traitlets.Unicode("").tag(sync=True)
 
-    def __init__(self, data, geo_json_path=None, **kwargs):
+    def __init__(self, geojson, config=None, **kwargs):
         super().__init__(**kwargs)
-        # Convertir DataFrame a lista de diccionarios si es necesario
-        if isinstance(data, pd.DataFrame):
-            self.data = data.to_dict('records')
-        else:
-            self.data = data
-        
-        # Cargar datos geográficos
-        if geo_json_path is None:
-            # Usar ruta por defecto para Brazil
-            # __file__ es vizpro/src/vizpro/graphs.py
-            # Necesitamos llegar a vizpro/datasets/brazil_geo.json
-            geo_json_path = pathlib.Path(__file__).parent.parent.parent / "datasets" / "brazil_geo.json"
-        
-        try:
-            import json
-            with open(geo_json_path, 'r', encoding='utf-8') as f:
-                self.geo_data = json.load(f)
-                print(f"✓ Archivo GeoJSON cargado: {len(self.geo_data.get('features', []))} estados")
-        except FileNotFoundError:
-            print(f"✗ Advertencia: No se encontró el archivo GeoJSON en {geo_json_path}")
-            self.geo_data = {}
-        except Exception as e:
-            print(f"✗ Error al cargar GeoJSON: {e}")
-            self.geo_data = {}
+        self.geojson = geojson
+        self.config = config if config is not None else {}
 
-    @property
-    def selected_values(self):
-        if not self.selected_values_records:
-            return None
-        return pd.DataFrame.from_records(self.selected_values_records)
-
-    def on_selected_values(self, callback):
-        self.observe(callback, names="selected_values_records")
+    def on_selected_region(self, callback):
+        """Register a callback to be called when a region is selected."""
+        self.observe(callback, names="selected_region")
