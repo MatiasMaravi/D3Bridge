@@ -5,11 +5,30 @@ import * as d3 from "d3";
 const MARGIN = { top: 20, right: 20, bottom: 40, left: 30 };
 const DEFAULT_WIDTH = 800;//Cambiar a el ancho del widget
 const DEFAULT_HEIGHT = 600;
+const DEFAULT_SINGLE_HEIGHT = 200;
 
 const colors = [
     { r: 17, g: 102, b: 255 },
     { r: 255, g: 51, b: 51 },
 ];
+
+function invertedSort(property: string) {
+    if (property[0] === "-") {
+        property = property.substring(1);
+    }
+
+    return function (a: any, b: any) {
+        let result;
+        if (a[property] < 0 && b[property] >= 0) {
+            result = 1;
+        } else if (a[property] >= 0 && b[property] < 0) {
+            result = -1;
+        } else {
+            result = a[property] > b[property] ? 1 : a[property] < b[property] ? -1 : 0;
+        }
+        return result;
+    }
+}
 
 function absoluteSort(property: string, ascending: boolean) {
     function arrayAbsSum(array: number[]) {
@@ -58,21 +77,35 @@ function get_color(value:number):string{
         ")"
     ].join("");
 }
-interface ShapRecord {
+
+interface ShapMultiRecord {
     feature_names: string;
     values: number[];
     data: number[];
 }
-interface FilteredShapRecord {
+
+interface ShapRecord {
+    feature_names: string;
+    values: number;
+    data: number;
+}
+
+interface FilteredShapMultiRecord {
     feature_names: string;
     values: number[];
     data: number[];
     base_values: number;
 }
+
+interface ShapMultiModel{
+    data: ShapMultiRecord[];
+    base_value: number;
+    selected_values_records?: FilteredShapMultiRecord[];
+}
 interface ShapModel{
     data: ShapRecord[];
     base_value: number;
-    selected_values_records?: FilteredShapRecord[];
+    selected_values_records?: ShapRecord[];
 }
 interface PathPoint {
     x: number;
@@ -81,16 +114,16 @@ interface PathPoint {
     feature_names?: string;
 }
 
-class ShapPlot {
+class ShapMultiPlot {
     protected el!: HTMLElement;
-    protected model!: AnyModel<ShapModel>;
+    protected model!: AnyModel<ShapMultiModel>;
     protected width: number;
     protected height: number;
     protected resizeObserver: ResizeObserver;
     protected all_paths: d3.Selection<SVGPathElement, PathPoint[], null, undefined>[] = [];
     protected selected_paths: number[] = [];
 
-    constructor(el: HTMLElement, model: AnyModel<ShapModel>) {
+    constructor(el: HTMLElement, model: AnyModel<ShapMultiModel>) {
         this.el = el;
         this.model = model;
         this.width = this.el.clientWidth || DEFAULT_WIDTH;
@@ -108,13 +141,13 @@ class ShapPlot {
         });
         this.resizeObserver.observe(this.el);
     }
-    protected set_selected_values(values: FilteredShapRecord[]){
+    protected set_selected_values(values: FilteredShapMultiRecord[]){
         this.model.set("selected_values_records", values);
         this.model.save_changes();
     }
-    protected call_update_selected(data: ShapRecord[], base_value: number){
+    protected call_update_selected(data: ShapMultiRecord[], base_value: number){
         this.all_paths.forEach((path) => path.classed("selected",this.selected_paths.includes(path.data()[0][0].index!)));
-        const filteredData: FilteredShapRecord[] = data.map((d) => {
+        const filteredData: FilteredShapMultiRecord[] = data.map((d) => {
             return {
                 "feature_names": d["feature_names"],
                 "values": this.selected_paths.map((i) => d["values"][i]),
@@ -128,11 +161,49 @@ class ShapPlot {
     public render() {}
 }
 
+class ShapPlot {
+    protected el!: HTMLElement;
+    protected model!: AnyModel<ShapModel>;
+    protected width: number;
+    protected height: number;
+    protected resizeObserver: ResizeObserver;
+    protected all_paths: d3.Selection<SVGPathElement, PathPoint[], null, undefined>[] = [];
+    protected selected_paths: number[] = [];
+
+    constructor(el: HTMLElement, model: AnyModel<ShapModel>) {
+        this.el = el;
+        this.model = model;
+        this.width = this.el.clientWidth || DEFAULT_WIDTH;
+        this.height = DEFAULT_SINGLE_HEIGHT;
+
+        this.resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const newWidth = entry.contentRect.width;
+                // Verificamos que el ancho haya cambiado realmente y sea válido
+                if (newWidth > 0 && Math.abs(newWidth - this.width) > 5) {
+                    this.width = newWidth;
+                    this.render(); // Redibujar
+                }
+            }
+        });
+        this.resizeObserver.observe(this.el);
+    }
+    protected set_selected_values(values: ShapRecord[]){
+        this.model.set("selected_values_records", values);
+        this.model.save_changes();
+    }
+
+    // Método para renderizar que será sobrecargado por las clases hijas
+    public render() {}
+}
+
 export { MARGIN, 
     colors, 
     absoluteSort,
+    invertedSort,
     getTextWidth,
     get_color,
-    ShapPlot
+    ShapPlot,
+    ShapMultiPlot
 };
-export type { ShapModel, ShapRecord, PathPoint };
+export type { ShapModel, ShapRecord, ShapMultiModel,ShapMultiRecord, PathPoint };

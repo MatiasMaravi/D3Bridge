@@ -1,6 +1,6 @@
 import type { RenderProps } from "@anywidget/types";
 import * as d3 from "d3";
-import { MARGIN, colors, absoluteSort,getTextWidth,get_color,ShapPlot,ShapModel, ShapRecord } from "./shap_plot";
+import { MARGIN, colors, absoluteSort,getTextWidth,get_color,ShapMultiPlot,ShapMultiModel, ShapMultiRecord } from "./shap_plot";
 import "./beeswarm.css";
 
 interface BeeswarmNode {
@@ -25,7 +25,7 @@ interface BeeswarmPathDatum {
     feature_names?: string;
 }
 
-class BeesWarm extends ShapPlot {
+class BeesWarm extends ShapMultiPlot {
     public render() {
         d3.select(this.el).selectAll("*").remove();
         this.all_paths = [];
@@ -178,9 +178,9 @@ class BeesWarm extends ShapPlot {
             this.call_update_selected(data, base_value);
         }
 
-        const addPoints = (data: ShapRecord[], scatter_data: Record<string, BeeswarmNode[]>, i: number) => {
+        const addPoints = (data: ShapMultiRecord[], scatter_data: Record<string, BeeswarmNode[]>, i: number) => {
             const datum: BeeswarmDatum[] = [];
-            data.forEach((d: ShapRecord) => {
+            data.forEach((d: ShapMultiRecord) => {
                 const node = scatter_data[d["feature_names"]][i];
                 datum.push({
                     x: node.x!,
@@ -273,7 +273,7 @@ class BeesWarm extends ShapPlot {
             .attr("stroke", "white")
             .attr("stroke-width", 5)
             .attr("stroke-opacity", 0)
-            .attr("d", (d: ShapRecord) => {
+            .attr("d", (d: ShapMultiRecord) => {
                 return d3.line()([
                     [x_scale.range()[0], y_scale(d["feature_names"])! + y_scale.bandwidth() / 2],
                     [x_scale.range()[1], y_scale(d["feature_names"])! + y_scale.bandwidth() / 2]
@@ -282,7 +282,7 @@ class BeesWarm extends ShapPlot {
     }
 }
 
-function render({ model, el }: RenderProps<ShapModel>) {
+function render({ model, el }: RenderProps<ShapMultiModel>) {
     // Limpiar el contenedor antes de renderizar
     let beeswarm = new BeesWarm(el, model);
     beeswarm.render();

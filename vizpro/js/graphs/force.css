@@ -1,0 +1,28 @@
+.polygon {
+    transition: opacity 0.2s ease;
+}
+
+.polygon:hover {
+    opacity: 0.85;
+    filter: brightness(1.1);
+}
+
+.polygon.selected {
+    stroke: #333;
+    stroke-width: 1px;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.force-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: sans-serif;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.15s ease;
+}

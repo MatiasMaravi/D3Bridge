@@ -116,7 +116,8 @@ _DATASETS = {
         "sales": "sales.csv",
         "state-population-2010-2019": "state-population-2010-2019.tsv",
         "affairs": "affairs.csv",
-        "iris": "iris.csv"
+        "iris": "iris.csv",
+        "gas": "gas.csv"
     }
 _GEO_DATASETS = {
     "Brazil":"brazil_geo.json",
