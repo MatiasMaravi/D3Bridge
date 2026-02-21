@@ -115,15 +115,13 @@ class HistogramPlot(anywidget.AnyWidget):
     
     x = traitlets.Unicode("").tag(sync=True)
     data = traitlets.List([]).tag(sync=True)
-    color_ = traitlets.Unicode("").tag(sync=True)
+    color = traitlets.Unicode("steelblue").tag(sync=True)
 
-    
-
-    def __init__(self, x, data, color_, **kwargs):
+    def __init__(self, x, data, color="steelblue", **kwargs):
         super().__init__(**kwargs)
         self.x = x
         self.data = data
-        self.color_ = color_
+        self.color = color
 
 class LinearPlot(anywidget.AnyWidget):
     _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "linearplot.js"

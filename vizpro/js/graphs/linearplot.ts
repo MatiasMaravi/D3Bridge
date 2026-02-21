@@ -1,110 +1,120 @@
 import type { RenderProps } from "@anywidget/types";
 import * as d3 from "d3";
+import { BasePlot, MARGIN, DEFAULT_HEIGHT } from "./base_plot";
 import "./linearplot.css";
-
-// Configuración de márgenes y dimensiones por defecto
-const MARGIN = { top: 30, right: 30, bottom: 50, left: 60 };
-const DEFAULT_WIDTH = 600;
-const DEFAULT_HEIGHT = 400;
 
 // Interfaz para el modelo de LinearPlot
 interface LinearPlotModel {
     x_: string;
     y_: string;
-    hue_?: string;
+    hue_: string;
     palette_: string[];
     data: any[];
     onSelectionChange_?: (selected: any[]) => void;
 }
-
+function dynamicSort(property: string) {
+    var sortOrder = 1;
+    if (property[0] === "-") {
+        sortOrder = -1;
+        property = property.substring(1);
+    }
+    return function (a: any, b: any) {
+        var result =
+            a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
+        return result * sortOrder;
+    };
+}
 // Funciones auxiliares para agrupar datos
-function getDataMeans(data: any[], xCol: string, yCols: string[], hueCol?: string): any[] {
-    if (!hueCol) return data;
-    
-    const grouped = d3.group(data, (d: any) => d[xCol], (d: any) => d[hueCol]);
-    const result: any[] = [];
-    
-    grouped.forEach((hueMap, xVal) => {
-        hueMap.forEach((values, hueVal) => {
-            const item: any = { [xCol]: xVal, [hueCol]: hueVal };
-            yCols.forEach(yCol => {
-                item[yCol] = d3.mean(values, (d: any) => +d[yCol]) || 0;
-            });
-            result.push(item);
+function getDataMeans(data: any[], x_value: string, y_value: string, hue: string): any[] {
+    function getMeans(array: any[]) {
+        const reduced = array.reduce((acc, item) => {
+            if (!acc[item[x_value]]) {
+                const obj: { [key: string]: any } = {};
+                obj[x_value] = item[x_value];
+                obj[y_value] = item[y_value];
+                if (hue) obj[hue] = item[hue];
+                obj["count"] = 1;
+                acc[item[x_value]] = obj;
+                return acc;
+            }
+            acc[item[x_value]][y_value] += item[y_value];
+            acc[item[x_value]].count += 1;
+            return acc;
+        }, {});
+        const mapedArray = Object.keys(reduced).map(function (k) {
+            const item = reduced[k];
+            const itemAverage: any = {};
+            itemAverage[y_value] = item[y_value] / item.count;
+
+            return {
+                ...item,
+                ...itemAverage,
+            };
         });
+        mapedArray.sort(dynamicSort(x_value));
+        return mapedArray;
+    }
+    if (!hue) return getMeans(data);
+
+    let groupedHue = groupArrayBy(data, hue);
+
+    let dataMeans: any[] = [];
+    Object.values(groupedHue).forEach(function (item, _index) {
+        const means = getMeans(item as any[]);
+        dataMeans = dataMeans.concat(means);
     });
-    
-    return result.length > 0 ? result : data;
+
+    return dataMeans;
 }
 
-function groupArrayBy(data: any[], key: string): { [key: string]: any[] } {
-    return data.reduce((result, item) => {
-        const groupKey = item[key];
-        if (!result[groupKey]) result[groupKey] = [];
-        result[groupKey].push(item);
-        return result;
-    }, {});
+function groupArrayBy(array: any[], item: string) {
+  return array.reduce(function (acc, i) {
+    return {
+      ...acc,
+      [i[item]]: [...(acc[i[item]] ?? []), i],
+    };
+  }, {});
 }
-
-class LinearPlot {
-    private el: HTMLElement;
-    private model: any;
+class LinearPlot extends BasePlot {
     private x_: string; // x-axis column name
     private y_: string; // y-axis column name
     private hue_: string; // hue column name (opcional, para agrupar)
     private palette_: string[]; // paleta de colores
     private data: any[]; // Array de objetos de datos
     private processedData: any[]; // Datos procesados con medias
-    private width: number;
-    private height: number;
-    private innerWidth: number;
-    private innerHeight: number;
-    private resizeObserver: ResizeObserver;
-    
+
     // Referencias a elementos D3
-    private svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null = null;
-    private g: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
     private xScale: d3.ScaleLinear<number, number> | null = null;
     private yScale: d3.ScaleLinear<number, number> | null = null;
-    private xAxis: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
-    private yAxis: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+    private xAxisGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+    private yAxisGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
     private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
 
     constructor(el: HTMLElement, model: any) {
-        this.el = el;
-        this.model = model;
+        super(el, model);
         this.data = model.get("data") || [];
         this.x_ = model.get("x");
         this.y_ = model.get("y");
-        this.hue_ = model.get("hue") || "";
-        this.palette_ = model.get("palette") || d3.schemeCategory10;
-        
-        // Dimensiones iniciales (se actualizarán con el ResizeObserver)
-        this.width = this.el.clientWidth || model.get("width") || DEFAULT_WIDTH;
+        this.hue_ = model.get("hue");
+        this.palette_ = model.get("palette");
+        if (this.palette_.length === 0) {
+            this.palette_ = d3.schemeCategory10 as string[];
+        }
+
+        // Actualizar altura si se proporciona
         this.height = model.get("height") || DEFAULT_HEIGHT;
-        this.innerWidth = this.width - MARGIN.left - MARGIN.right;
         this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
 
-        // Configurar ResizeObserver para ajustar el ancho automáticamente
-        this.resizeObserver = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                const newWidth = entry.contentRect.width;
-                if (newWidth > 0 && newWidth !== this.width) {
-                    this.width = newWidth;
-                    this.innerWidth = this.width - MARGIN.left - MARGIN.right;
-                    this.render();
-                }
-            }
-        });
-        this.resizeObserver.observe(this.el);
-        
         // Procesar datos
-        this.processedData = getDataMeans(this.data, this.x_, [this.y_], this.hue_);
+        this.processedData = getDataMeans(this.data, this.x_, this.y_, this.hue_);
         this.processedData.forEach((d, i) => d.id = i);
     }
 
     // Crear tooltip
     private createTooltip(): void {
+        // Asegurar que el contenedor tenga position relative para el tooltip
+        d3.select(this.el).style("position", "relative");
+        
         this.tooltip = d3.select(this.el)
             .append("div")
             .attr("class", "linearplot-tooltip")
@@ -153,7 +163,7 @@ class LinearPlot {
     private createDots(colorScale: d3.ScaleOrdinal<string, string>): void {
         if (!this.g || !this.xScale || !this.yScale) return;
 
-        const dots = this.g.selectAll(".line-dot")
+        this.g.selectAll(".line-dot")
             .data(this.processedData)
             .enter()
             .append("circle")
@@ -176,11 +186,16 @@ class LinearPlot {
 
         if (this.tooltip) {
             const text = `x: ${Math.round(d[this.x_] * 100) / 100}, y: ${Math.round(d[this.y_] * 100) / 100}`;
+            // Obtener la posición relativa al contenedor
+            const containerRect = this.el.getBoundingClientRect();
+            const tooltipX = event.clientX - containerRect.left + 10;
+            const tooltipY = event.clientY - containerRect.top - 20;
+            
             this.tooltip
                 .style("opacity", 1)
                 .html(text)
-                .style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY - 20}px`);
+                .style("left", `${tooltipX}px`)
+                .style("top", `${tooltipY}px`);
         }
     }
 
@@ -194,10 +209,10 @@ class LinearPlot {
         }
     }
 
-    private handleClick(event: MouseEvent, d: any): void {
+    private handleClick(event: MouseEvent, _d: any): void {
         const element = d3.select(event.currentTarget as Element);
         element.classed("selected", !element.classed("selected"));
-        
+
         if (this.g) {
             const selected = this.g.selectAll(".line-dot.selected").data();
             // Enviar los valores seleccionados a Python
@@ -207,37 +222,9 @@ class LinearPlot {
         }
     }
 
-    // Crear leyenda
-    private createLegend(colorScale: d3.ScaleOrdinal<string, string>): void {
-        if (!this.hue_ || !this.svg) return;
-
-        const legendData = colorScale.domain();
-        const legend = this.svg.append("g")
-            .attr("class", "legend")
-            .attr("transform", `translate(${this.width - 120}, ${MARGIN.top})`);
-
-        const legendItems = legend.selectAll(".legend-item")
-            .data(legendData)
-            .enter()
-            .append("g")
-            .attr("class", "legend-item")
-            .attr("transform", (_, i) => `translate(0, ${i * 20})`);
-
-        legendItems.append("rect")
-            .attr("width", 15)
-            .attr("height", 15)
-            .attr("fill", d => colorScale(d));
-
-        legendItems.append("text")
-            .attr("x", 20)
-            .attr("y", 12)
-            .text(d => d)
-            .style("font-size", "12px");
-    }
-
     // Configurar zoom
     private setupZoom(): void {
-        if ( !this.svg || !this.xScale || !this.yScale) return;
+        if (!this.svg || !this.xScale || !this.yScale) return;
 
         const zoom = d3.zoom<SVGSVGElement, unknown>()
             .scaleExtent([1, 50])
@@ -255,9 +242,9 @@ class LinearPlot {
         const newY = event.transform.rescaleY(this.yScale);
 
         // Actualizar ejes
-        if ( this.xAxis && this.yAxis) {
-            this.xAxis.call(d3.axisBottom(newX) as any);
-            this.yAxis.call(d3.axisLeft(newY) as any);
+        if (this.xAxisGroup && this.yAxisGroup) {
+            this.xAxisGroup.call(d3.axisBottom(newX) as any);
+            this.yAxisGroup.call(d3.axisLeft(newY) as any);
         }
 
         // Actualizar líneas
@@ -276,21 +263,11 @@ class LinearPlot {
 
     // Crear el gráfico completo
     public createLinearPlot(): void {
-        // Limpiar el contenedor
-        d3.select(this.el).selectAll("*").remove();
+        // Crear SVG usando método heredado
+        this.createSvg("linearplot-svg");
 
         // Crear tooltip
         this.createTooltip();
-
-        // Crear SVG
-        this.svg = d3.select(this.el)
-            .append("svg")
-            .attr("width", this.width)
-            .attr("height", this.height)
-            .attr("class", "linearplot-svg");
-
-        this.g = this.svg.append("g")
-            .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
 
         // Crear escalas
         const xExtent = d3.extent(this.processedData, d => d[this.x_]) as [number, number];
@@ -309,37 +286,38 @@ class LinearPlot {
         // Escala de colores
         const colorScale = this.getColorScale();
 
-            this.xAxis = this.g.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", `translate(0,${this.innerHeight})`)
-                .call(d3.axisBottom(this.xScale));
+        // Guardar referencia a los grupos de ejes para el zoom
+        this.xAxisGroup = this.g!.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${this.innerHeight})`)
+            .call(d3.axisBottom(this.xScale));
 
-            this.yAxis = this.g.append("g")
-                .attr("class", "y-axis")
-                .call(d3.axisLeft(this.yScale));
+        this.yAxisGroup = this.g!.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(this.yScale));
 
-            // Etiquetas
-            this.g.append("text")
-                .attr("class", "x-label")
-                .attr("x", this.innerWidth / 2)
-                .attr("y", this.innerHeight + MARGIN.bottom - 10)
-                .attr("text-anchor", "middle")
-                .text(this.x_);
+        // Etiquetas
+        this.g!.append("text")
+            .attr("class", "x-label")
+            .attr("x", this.innerWidth / 2)
+            .attr("y", this.innerHeight + MARGIN.bottom - 10)
+            .attr("text-anchor", "middle")
+            .text(this.x_);
 
-            this.g.append("text")
-                .attr("class", "y-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -MARGIN.left + 15)
-                .attr("x", -this.innerHeight / 2)
-                .attr("text-anchor", "middle")
-                .text(this.y_);
+        this.g!.append("text")
+            .attr("class", "y-label")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -MARGIN.left + 15)
+            .attr("x", -this.innerHeight / 2)
+            .attr("text-anchor", "middle")
+            .text(this.y_);
 
         // Crear líneas y puntos
         this.createLines(colorScale);
         this.createDots(colorScale);
 
         // Crear leyenda
-        this.createLegend(colorScale);
+        this.createLegend(colorScale.domain(), colorScale);
 
         // Configurar zoom
         this.setupZoom();
@@ -360,20 +338,11 @@ function render({ el, model }: RenderProps<LinearPlotModel>): (() => void) | voi
     let linearplot = new LinearPlot(el, model);
     linearplot.render();
 
-    // Listeners para cambios en los traitlets de Python
-    const rerender = () => {
-        if (linearplot) {
-            linearplot.destroy();
-        }
-        linearplot = new LinearPlot(el, model);
-        linearplot.render();
-    };
-
-    model.on("change:x", rerender);
-    model.on("change:y", rerender);
-    model.on("change:hue", rerender);
-    model.on("change:palette", rerender);
-    model.on("change:data", rerender);
+    model.on("change:x", () => linearplot.render());
+    model.on("change:y", () => linearplot.render());
+    model.on("change:hue", () => linearplot.render());
+    model.on("change:palette", () => linearplot.render());
+    model.on("change:data", () => linearplot.render());
 
     return () => {
         if (linearplot) {

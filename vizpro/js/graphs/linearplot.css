@@ -8,10 +8,7 @@
     transition: stroke-width 0.2s ease;
 }
 
-.line-path:hover {
-    stroke-width: 3;
-    cursor: pointer;
-}
+
 
 .line-dot {
     transition: opacity 0.2s ease, r 0.2s ease;
