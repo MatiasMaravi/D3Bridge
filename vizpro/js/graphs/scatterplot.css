@@ -1,0 +1,72 @@
+.scatterplot-svg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.dot {
+    cursor: pointer;
+    transition: opacity 0.2s ease, r 0.2s ease;
+}
+
+.dot:hover {
+    opacity: 1 !important;
+    r: 7;
+}
+
+.dot.selected {
+    stroke: #000;
+    stroke-width: 2px;
+    opacity: 1 !important;
+}
+
+.x-axis text,
+.y-axis text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.x-axis path,
+.x-axis line,
+.y-axis path,
+.y-axis line {
+    stroke: #999;
+}
+
+.x-label,
+.y-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: #333;
+    text-anchor: middle;
+}
+
+.legend text {
+    fill: #333;
+    font-size: 12px;
+}
+
+.legend-item {
+    cursor: default;
+}
+
+.reference_line {
+    stroke-width: 1.5;
+    fill: none;
+}
+
+/* Tooltip/Information Card */
+.information-card {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.information-card.visible {
+    opacity: 1;
+}

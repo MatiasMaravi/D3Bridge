@@ -76,12 +76,12 @@ function groupArrayBy(array: any[], item: string) {
   }, {});
 }
 class LinearPlot extends BasePlot {
-    private x_: string; // x-axis column name
-    private y_: string; // y-axis column name
-    private hue_: string; // hue column name (opcional, para agrupar)
-    private palette_: string[]; // paleta de colores
-    private data: any[]; // Array de objetos de datos
-    private processedData: any[]; // Datos procesados con medias
+    private readonly x_: string; // x-axis column name
+    private readonly y_: string; // y-axis column name
+    private readonly hue_: string; // hue column name (opcional, para agrupar)
+    private readonly palette_: string[]; // paleta de colores
+    private readonly data: any[]; // Array de objetos de datos
+    private readonly processedData: any[]; // Datos procesados con medias
 
     // Referencias a elementos D3
     private xScale: d3.ScaleLinear<number, number> | null = null;

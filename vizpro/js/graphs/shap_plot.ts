@@ -197,7 +197,9 @@ class ShapPlot {
     public render() {}
 }
 
-export { MARGIN, 
+export { MARGIN,
+    DEFAULT_HEIGHT,
+    DEFAULT_SINGLE_HEIGHT,
     colors, 
     absoluteSort,
     invertedSort,
