@@ -1,100 +1,4 @@
-
-import * as d3 from "https://esm.sh/d3@7";
-
-
-function render({ model, el }) {
-    let element;
-    let width;
-    let height = 400;
-    let resizeObserver;
-    let initialized = false;
-    let lastWidth = 0;
-    let resizeTimeout = null;
-
-    // Configurar estilos del contenedor con altura FIJA para celda Jupyter
-    el.style.width = "100%";
-    el.style.height = "400px";
-    el.style.overflow = "hidden";
-    el.style.position = "relative";
-
-    function getElement() {
-        const elementId = model.get("elementId");
-        return elementId ? document.getElementById(elementId) : el;
-    }
-
-    function updateSizes() {
-        element = getElement();
-        if (!element) return false;
-        
-        width = element.clientWidth || element.offsetWidth;
-        // Altura fija, no dependemos del contenido
-        height = 400;
-        
-        return width > 0;
-    }
-
-    function replot() {
-        if (!element || !updateSizes()) return;
-        element.innerHTML = "";
-
-					const data = model.get("data");
-
-
-        plot(data);
-    }
-
-    function initializeWidget() {
-        if (initialized) return;
-        
-        element = getElement();
-        if (!element || !updateSizes()) return;
-
-        initialized = true;
-        lastWidth = width;
-
-        // Registrar cambios en el modelo
-					model.on("change:data", replot);
-
-
-        // Renderizar inicialmente
-					const data = model.get("data");
-
-        plot(data);
-    }
-
-    // Usar ResizeObserver solo para detectar cambios de ANCHO
-    resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-            const newWidth = entry.contentRect.width;
-            
-            if (newWidth > 0) {
-                if (!initialized) {
-                    initializeWidget();
-                } else if (Math.abs(newWidth - lastWidth) > 5) {
-                    // Solo re-renderizar si el ancho cambió significativamente
-                    lastWidth = newWidth;
-                    
-                    // Debounce para evitar múltiples renders
-                    if (resizeTimeout) clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(() => {
-                        replot();
-                    }, 150);
-                }
-            }
-        }
-    });
-
-    // Observar el elemento contenedor
-    resizeObserver.observe(el);
-
-    // Fallback: intentar inicializar si el elemento ya tiene tamaño
-    requestAnimationFrame(() => {
-        if (!initialized && updateSizes()) {
-            initializeWidget();
-        }
-    });
-
-    function plot(data) {
+function plot(data) {
   // ============================================================
   // CONFIGURACIÓN Y CONSTANTES
   // ============================================================
@@ -110,17 +14,16 @@ function render({ model, el }) {
     }
   };
 
-  const { layers } = data;
-  const layerNames = Object.keys(layers);   // ["fc1", "fc2", "fc3", "fc4"]
-  const maxLayerIndex = layerNames.length - 1;
+  const { epochs } = data;
+  const maxEpoch = epochs.length - 1;
 
   // ============================================================
   // UTILIDADES
   // ============================================================
-
+  
   // Asignar índice estable a cada punto
-  layerNames.forEach(name => {
-    layers[name].forEach((point, i) => {
+  epochs.forEach(epochData => {
+    epochData.points.forEach((point, i) => {
       point.idx = point.idx ?? i;
     });
   });
@@ -137,17 +40,17 @@ function render({ model, el }) {
     .y(d => d[1])
     .curve(d3.curveLinear);
 
-  // Calcular trayectoria hasta una capa dada
-  const getTrajectory = (idx, layerIndex) =>
-    layerNames.slice(0, layerIndex + 1).map(name => [
-      xScale(layers[name][idx].x),
-      yScale(layers[name][idx].y)
+  // Calcular trayectoria hasta un epoch dado
+  const getTrajectory = (idx, epochIndex) => 
+    epochs.slice(0, epochIndex + 1).map(e => [
+      xScale(e.points[idx].x),
+      yScale(e.points[idx].y)
     ]);
 
-  // Calcular trayectoria de la capa anterior (para animación)
-  const getPreviousTrajectory = (idx, layerIndex) => {
-    if (layerIndex === 0) return getTrajectory(idx, 0);
-    return getTrajectory(idx, layerIndex - 1);
+  // Calcular trayectoria del epoch anterior al actual (para animación)
+  const getPreviousTrajectory = (idx, epochIndex) => {
+    if (epochIndex === 0) return getTrajectory(idx, 0);
+    return getTrajectory(idx, epochIndex - 1);
   };
 
   // ============================================================
@@ -163,7 +66,7 @@ function render({ model, el }) {
 
   const container = d3.select(element)
     .append("div")
-    .attr("class", "layer-viz-container")
+    .attr("class", "epoch-viz-container")
     .style("font-family", "sans-serif")
     .style("position", "relative");
 
@@ -172,16 +75,16 @@ function render({ model, el }) {
     .attr("class", "controls")
     .style("margin-bottom", "8px");
 
-  // Slider de Layer
-  controls.append("label").append("b").text("Layer: ");
-  const layerSlider = controls.append("input")
+  // Slider de Epoch
+  controls.append("label").append("b").text("Epoch: ");
+  const epochSlider = controls.append("input")
     .attr("type", "range")
     .attr("min", 0)
-    .attr("max", maxLayerIndex)
+    .attr("max", maxEpoch)
     .attr("value", 0)
     .attr("step", 1);
 
-  const layerLabel = controls.append("span").text(layerNames[0]);
+  const epochLabel = controls.append("span").text("0");
   controls.append("span").html("&nbsp;&nbsp;&nbsp;");
 
   // Selector de Modo
@@ -233,7 +136,7 @@ function render({ model, el }) {
   svg.call(zoom);
 
   // Escalas globales (calculadas una vez sobre todos los puntos)
-  const allPoints = layerNames.flatMap(name => layers[name]);
+  const allPoints = epochs.flatMap(e => e.points);
   const xScale = d3.scaleLinear()
     .domain(d3.extent(allPoints, d => d.x))
     .range([CONFIG.margin, width - CONFIG.margin]);
@@ -272,7 +175,7 @@ function render({ model, el }) {
     });
   };
 
-  // Crear items de leyenda usando pattern consistente
+  // Crear items de leyenda usando join pattern
   Object.entries(CONFIG.colors).forEach(([label, color]) => {
     const labelNum = +label;
     const entry = legend.append("div")
@@ -284,7 +187,7 @@ function render({ model, el }) {
         if (event.detail === 2) {
           selectedLabels.clear();
         } else {
-          selectedLabels.has(labelNum)
+          selectedLabels.has(labelNum) 
             ? selectedLabels.delete(labelNum)
             : selectedLabels.add(labelNum);
         }
@@ -310,13 +213,13 @@ function render({ model, el }) {
     .style("align-items", "center")
     .style("gap", "10px");
 
-  gradLegend.append("span").text("first layer");
+  gradLegend.append("span").text("first epoch");
   gradLegend.append("div")
     .style("width", "150px")
     .style("height", "12px")
     .style("background", "linear-gradient(to right, rgba(0,0,0,0.10), rgba(0,0,0,1))")
     .style("border-radius", "6px");
-  gradLegend.append("span").text("current layer");
+  gradLegend.append("span").text("current epoch");
 
   // ============================================================
   // TOOLTIP
@@ -350,19 +253,19 @@ function render({ model, el }) {
   /**
    * Actualiza o crea gradientes para cada trayectoria
    */
-  const updateGradients = (points, layerIndex) => {
+  const updateGradients = (points, epochIndex) => {
     const gradients = defs.selectAll("linearGradient")
       .data(points, d => d.idx);
 
     gradients.join(
       enter => enter.append("linearGradient")
-        .attr("id", d => `gradL-${d.idx}`)
+        .attr("id", d => `grad-${d.idx}`)
         .attr("gradientUnits", "userSpaceOnUse"),
       update => update,
       exit => exit.remove()
     ).each(function(d) {
       const grad = d3.select(this);
-      const traj = getTrajectory(d.idx, layerIndex);
+      const traj = getTrajectory(d.idx, epochIndex);
       const [x1, y1] = traj[0];
       const [x2, y2] = traj[traj.length - 1];
 
@@ -384,8 +287,8 @@ function render({ model, el }) {
   /**
    * Actualiza las trayectorias con animación sincronizada
    */
-  const updateTrajectories = (points, layerIndex) => {
-    updateGradients(points, layerIndex);
+  const updateTrajectories = (points, epochIndex) => {
+    updateGradients(points, epochIndex);
 
     trajectoryGroup.selectAll("path")
       .data(points, d => d.idx)
@@ -393,8 +296,8 @@ function render({ model, el }) {
         enter => enter.append("path")
           .attr("fill", "none")
           .attr("stroke-width", CONFIG.strokeWidth)
-          .attr("stroke", d => `url(#gradL-${d.idx})`)
-          .attr("d", d => lineGenerator(getTrajectory(d.idx, layerIndex)))
+          .attr("stroke", d => `url(#grad-${d.idx})`)
+          .attr("d", d => lineGenerator(getTrajectory(d.idx, epochIndex)))
           .attr("stroke-dasharray", function() {
             const length = this.getTotalLength();
             return `${length} ${length}`;
@@ -408,21 +311,21 @@ function render({ model, el }) {
             .attr("stroke-dashoffset", 0)),
 
         update => update
-          .attr("stroke", d => `url(#gradL-${d.idx})`)
+          .attr("stroke", d => `url(#grad-${d.idx})`)
           .each(function(d) {
             const path = d3.select(this);
-            const prevPath = lineGenerator(getPreviousTrajectory(d.idx, layerIndex));
-            const newPath = lineGenerator(getTrajectory(d.idx, layerIndex));
-
+            const prevPath = lineGenerator(getPreviousTrajectory(d.idx, epochIndex));
+            const newPath = lineGenerator(getTrajectory(d.idx, epochIndex));
+            
             // Primero establecer el path anterior
             path.attr("d", prevPath)
               .attr("stroke-dasharray", null)
               .attr("stroke-dashoffset", null);
 
             // Si la trayectoria creció, animar el nuevo segmento
-            if (layerIndex > 0) {
+            if (epochIndex > 0) {
               const prevLength = path.node().getTotalLength();
-
+              
               // Actualizar al nuevo path
               path.attr("d", newPath);
               const newLength = path.node().getTotalLength();
@@ -484,21 +387,21 @@ function render({ model, el }) {
   /**
    * Función principal de actualización
    */
-  const update = (layerIndex, mode, showAxes) => {
+  const update = (epochIndex, mode, showAxes) => {
     // Filtrar puntos según selección
-    const currentLayerPoints = layers[layerNames[layerIndex]];
+    const allPointsInEpoch = epochs[epochIndex].points;
     const points = selectedLabels.size > 0
-      ? currentLayerPoints.filter(d => selectedLabels.has(d.label))
-      : currentLayerPoints;
+      ? allPointsInEpoch.filter(d => selectedLabels.has(d.label))
+      : allPointsInEpoch;
 
     // Actualizar UI
-    layerLabel.text(layerNames[layerIndex]);
+    epochLabel.text(epochIndex);
     xAxisG.style("display", showAxes === "on" ? null : "none");
     yAxisG.style("display", showAxes === "on" ? null : "none");
 
     // Actualizar visualización según modo
     if (mode === "trajectories") {
-      updateTrajectories(points, layerIndex);
+      updateTrajectories(points, epochIndex);
     } else {
       // Limpiar trayectorias con transición
       trajectoryGroup.selectAll("path")
@@ -518,7 +421,7 @@ function render({ model, el }) {
    */
   const refresh = () => {
     update(
-      +layerSlider.property("value"),
+      +epochSlider.property("value"),
       modeSelectEl.property("value"),
       axisSelect.property("value")
     );
@@ -527,7 +430,7 @@ function render({ model, el }) {
   // ============================================================
   // EVENT LISTENERS (usando D3 consistentemente)
   // ============================================================
-  layerSlider.on("input", refresh);
+  epochSlider.on("input", refresh);
   modeSelectEl.on("change", refresh);
   axisSelect.on("change", refresh);
 
@@ -537,7 +440,3 @@ function render({ model, el }) {
   updateLegendStyles();
   update(0, "positions", "off");
 }
-}
-
-export default { render };
-        
