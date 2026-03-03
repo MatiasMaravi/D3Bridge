@@ -1,0 +1,125 @@
+\newpage
+\section{The d3vis\_IPYNB Library}
+The d3vis\_ipynb library was developed to integrate D3.js into computational notebooks, addressing the growing demand among data professionals for customizable visualizations and widgets within widely used development environments, such as Jupyter Notebook and JupyterLab, along with Google Colab. Fig.~\ref{fig:teaser} illustrates the complete workflow of \textit{d3vis\_ipynb}, from the integration of custom D3.js code to the export of a fully functional dashboard, ready for deployment. The \textit{d3vis\_ipynb} is publicly available at \href{https://anonymous.4open.science/r/d3visipynb-C47B/}{anonimous link} for review purposes. \emph{If the paper is accepted, the source code and documentation will be made publicly available via a GitHub repository.} %https://drive.google.com/drive/folders/1TDpv4zhnGQLBDg11crQZyxqeRHpnVJzR?usp=sharing
+
+\textit{d3vis\_ipynb} starts from the initial stages of the data exploration and visualization process. Once the datasets are loaded into the computational notebook, users can generate visualizations as standalone plots in individual cells or as linked views within a dashboard. For that, they may employ the predefined visual alternatives provided by the library or integrate custom visualizations by importing D3.js code, enabling the addition of complex visualizations. Upon completing the exploration process, users can either share their notebook directly or export it as a web-based tool, ready for deployment on a web server.
+
+
+\subsection{Integration of customized visual elements}
+Integrating customized visual elements from D3.js code into computational notebooks requires bridging the gap between Python and JavaScript UI. In this work, we used \emph{anywidget}, a modern framework that enables seamless widget development across multiple notebook environments, including Jupyter Notebook, JupyterLab, and Google Colab. This approach provides enhanced flexibility and compatibility compared to traditional widget frameworks.
+
+The creation of a widget in \emph{d3vis\_ipynb} involves two complementary declarations. First, a Python class defines the widget structure and its properties, utilizing the \emph{Traitlets} library to monitor and synchronize state changes between the Python kernel and the JavaScript frontend. Second, a JavaScript implementation defines the D3.js-based visualization logic and associated CSS styles. Fig.~\ref{fig:structure-library} illustrates this architectural pattern and the communication flow between both layers.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figs/structure_library.png}
+    \caption{Widget architecture showing the bidirectional communication structure between Python class declarations and JavaScript implementations.}
+    \label{fig:structure-library}
+\end{figure}
+
+Each widget instance is connected to a model that is also connected to the frontend. As a result, any frontend rendering of the widget is automatically updated in response to changes in the model's data. 
+
+The \emph{Traitlets} library manages bidirectional communication between Python and JavaScript. Each widget defines variables using Traitlets in Python, which are mirrored in the JavaScript-side model. When a Traitlet variable changes, the corresponding model variable is updated, which in turn affects the visual representation. Traitlets allows monitoring changes in variable values and the implementation of callbacks. This mechanism ensures the communication between different widgets.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/jwidgets.PNG}
+    \caption{Widget model interaction with widget view and Model that connect Python and JavaScript.}
+    \label{fig:jupyter-widgets}
+\end{figure}
+
+
+This architecture provides significant flexibility for manipulating widgets. Moreover, it enables dynamic programming of interactions and allows parameters modification at any cell within the computational notebook, supporting an interactive analytical workflow.
+
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.85\linewidth]{figs/matrix2N.png}
+    \caption{Wrapper generation and representations embedding. (A) Simple wrapper distribution, (B) customized wrapper with different shape, (C) visual components presentation using generated wrappers. }
+    \label{fig:matrix2N}
+\end{figure*}
+
+\subsection{Interactive Visualizations}\label{sec:linkedviews} 
+The primary goal of \emph{d3vis\_ipynb} is to enable the creation of a fully interactive dashboard with linked views. This is achieved through wrappers that connect Python with the user interface and transfer data between visual components and Python cells. To ensure platform flexibility, we implemented web-based wrappers. A video of \emph{d3vis\_ipynb} working is presented on \href{https://sendgb.com/whKtTkuvA3c}{Link Video (119.mp4)}
+%https://drive.google.com/file/d/1jloXQxu4FCW_xhye9iFD-uCNFcbWLJnA/view?usp=sharing
+
+The dashboard implementation incorporates a \emph{Matrix Creator} that simplifies the definition of visualization layouts. This tool allows users to intuitively specify the position and arrangement of graphical components within the dashboard (Fig.~\ref{fig:matrix-creator}). Additionally, the library implements a \emph{linked views} functionality, enabling interactive coordination between visualizations: selections or modifications in one chart are automatically reflected in related visualizations. Furthermore, a \emph{selected values} feature allows users to interactively select data subsets and store them in variables, which can then be used for subsequent analysis in other notebook cells, facilitating an exploratory workflow.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figs/matriz_creator.png}
+    \caption{Matrix Creator interface for defining visualization layout configurations.}
+    \label{fig:matrix-creator} 
+\end{figure}
+
+For organizing visual components, we developed a versatile matrix-based strategy. The module that we built for that is called \emph{Embedding}, which renders matrix-based layout containers for visual components.
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import pandas as pd
+# importing d3vis_ipynb for a computational notebook
+import d3vis_ipynb
+\end{lstlisting}
+
+The wrappers are generated and positioned according to the values in the input matrix. The number of wrappers depends on the matrix's unique values. The position and geometry of each wrapper depend on the continuous structure formed by each value. For instance, in the case of two vertically stacked wrappers (Fig.~\ref{fig:matrix2N}-A), we could use:
+
+\begin{lstlisting}[language=Python]
+matrix = [[1],[2]]
+embed = Embedding(matrix)
+embed
+\end{lstlisting}
+%    \begin{figure}[h!]
+%    \centering
+%    \includegraphics[width=0.8\linewidth]{figs/matrix1N.png}
+%    \caption{}
+%    \label{fig:matrix1N}
+%\end{figure}
+
+Moreover, each wrapper can have a more complex structure and customized CSS style. The CSS style could be defined by the user through an external stylesheet, or by selecting one of the themes available (neuromorphism, minimalist, and dark). For instance, Fig. \ref{fig:matrix2N}-B could be defined as follows:
+\begin{lstlisting}[language=Python]
+matrix = [
+    [1, 2, 2, 3, 3],
+    [1, 4, 4, 4, 4],
+    [1, 5, 5, 5, 5]
+]
+#create wrappers with neuromorphism css style
+embed = Embedding(matrix, style='neuromorphism')
+embed
+\end{lstlisting}
+
+Once the wrapper distribution is defined, different previously defined graphical resources can be added. Fig. \ref{fig:matrix2N}-C shows the result of this embedding:
+\begin{lstlisting}[language=Python]
+...
+embed.add(scatterplot, 1)
+embed.add(histplot1, 2) 
+embed.add(histplot2, 3) 
+embed.add(linechart1, 3)
+embed.add(barplot1, 3)
+embed
+\end{lstlisting}
+
+\subsection{Custom Widgets}
+In addition to several basic graphical tools included in the library, i.e. bar plots, histograms, scatter plots, line charts, and sliders, \emph{d3vis\_ipynb} provides the possibility of importing custom visualizations and styles. A custom widget can be created from a D3.js-based code file, which can be imported into the library and integrated as part of the interaction with the other visual components. 
+
+The widget creation process has been streamlined through the use of \emph{anywidget}. Users define a Python class that specifies the visualization properties and employs \emph{Traitlets} to listen for changes from the JavaScript layer, where the D3.js visualization and styles are defined. This two-part declaration approach simplifies the integration of custom visualizations:
+
+ %, caption={Custom D3.js Barplot in \texttt{d3vis\_ipynb}}, label={lst:custombarplot}]
+\begin{lstlisting}[language=Python]
+class CustomBarplot(CustomWidget):
+    _esm = CustomWidget.createWidgetFromLocalFile(
+        paramList=["data"], 
+        filePath=r"..\samples\d3_barchart_original.js"
+    )
+    
+    data = traitlets.List([]).tag(sync=True)
+
+# Instantiate and use the custom widget
+barplot = CustomBarplot(data=df_alphabet.data)
+
+# Add to dashboard container
+embed.add(barplot, 1)
+embed
+\end{lstlisting}
+
+This simplified approach allows users to incorporate custom D3.js visualizations with minimal boilerplate code. The widget automatically handles the synchronization between Python data structures and JavaScript rendering. In addition, \emph{d3vis\_ipynb} supports interactivity through user-defined functions that enable different operations, which include tasks such as selecting and filtering values for subsequent analysis within Python cells. The \emph{selected values} functionality further enhances this capability by allowing users to extract and store selected data subsets for use in downstream analysis.
