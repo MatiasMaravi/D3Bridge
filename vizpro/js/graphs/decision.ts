@@ -1,11 +1,11 @@
 import type { RenderProps } from "@anywidget/types";
 import * as d3 from "d3";
-import { MARGIN, colors, absoluteSort, getTextWidth, get_color, ShapPlot } from "./shap_plot";
-import type { ShapModel, ShapRecord, PathPoint } from "./shap_plot";
+import { MARGIN, colors, absoluteSort, getTextWidth, get_color, ShapMultiPlot } from "./shap_plot";
+import type { ShapMultiModel, ShapMultiRecord, PathPoint } from "./shap_plot";
 import "./decision.css";
 
-class Decision extends ShapPlot {
-    private get_domain(data: ShapRecord[], base_value: number) {
+class Decision extends ShapMultiPlot {
+    private get_domain(data: ShapMultiRecord[], base_value: number) {
         function get_min_max(i:number){
             let min = base_value;
             let max = base_value;
@@ -48,6 +48,7 @@ class Decision extends ShapPlot {
         d3.select(this.el).selectAll("*").remove();
 
         const data = this.model.get("data");
+        console.log(data);
         const base_value = this.model.get("base_value");
 
         const maxTextWidth = d3.max(data, (d) =>
@@ -138,10 +139,10 @@ class Decision extends ShapPlot {
                 ]));
         }
 
-        const addPath = (_data: ShapRecord[], i: number) => {
+        const addPath = (_data: ShapMultiRecord[], i: number) => {
             let path_point = base_value;
             const datum: PathPoint[] = [{"x": x_scale(path_point), "y": y_scale.range()[0], "index": i}];
-            data.forEach((d: ShapRecord) => {
+            data.forEach((d: ShapMultiRecord) => {
                 path_point += d["values"][i];
                 datum.push({"x": x_scale(path_point), "y": y_scale(d["feature_names"])!, "feature_names": d["feature_names"]});
             });
@@ -185,7 +186,7 @@ class Decision extends ShapPlot {
     }
 }
 
-function render({ model, el }: RenderProps<ShapModel>) {
+function render({ model, el }: RenderProps<ShapMultiModel>) {
     // Limpiar el contenedor antes de renderizar
     let decision = new Decision(el, model);
     decision.render();

@@ -1,0 +1,67 @@
+/* Waterfall Plot Styles */
+
+.waterfallplot-svg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
+}
+
+.polygon {
+    cursor: pointer;
+    stroke: none;
+    transition: opacity 0.2s ease;
+}
+
+.polygon:hover {
+    opacity: 0.8;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+.polygon.selected {
+    stroke: #000;
+    stroke-width: 3px;
+    opacity: 1;
+}
+
+.waterfall-connector {
+    stroke: grey;
+    stroke-dasharray: 2, 2;
+    fill: none;
+    pointer-events: none;
+}
+
+.waterfall-label {
+    font-size: 12px;
+    font-weight: 500;
+    pointer-events: none;
+    user-select: none;
+}
+
+.waterfall-result {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #333;
+}
+
+/* Axis Styles */
+.x-axis path,
+.y-axis path {
+    stroke: #333;
+}
+
+.x-axis line,
+.y-axis line {
+    stroke: #999;
+}
+
+.x-axis text,
+.y-axis text {
+    fill: #333;
+    font-size: 12px;
+}
+
+.x-label,
+.y-label {
+    fill: #333;
+    font-size: 14px;
+    font-weight: 500;
+}
