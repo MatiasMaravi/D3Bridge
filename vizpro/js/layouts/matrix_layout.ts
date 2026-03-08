@@ -6,34 +6,36 @@ interface MatrixLayoutModel {
     widget_areas: Record<string, string>;
     style: string;
     children: any[];
+    matrix: number[][];
 }
 
 async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
-    const gridContainer = document.createElement("div");
-    gridContainer.style.display = "grid";
-    gridContainer.style.height = "100%";
-    gridContainer.style.width = "100%";
-    gridContainer.style.gap = "5px";
+    const node = document.createElement("div");
+    const matrix = model.get("matrix");
+    const style = model.get("style") || "basic";
+
+    const numRows = matrix.length;
+    const numCols = matrix[0].length;
+
+    node.classList.add(style);
+    node.style.display = "grid";
+    node.style.gridTemplateAreas = model.get("grid_template_areas");
+    node.style.gridTemplateRows = "repeat(" + numRows + ", 180px)";
+    node.style.gridTemplateColumns = "repeat(" + numCols + ", 1fr)";
+    node.style.width = "100%";
     
-    // Configurar grid inicial
-    gridContainer.style.gridTemplateAreas = model.get("grid_template_areas");
-    gridContainer.style.gridAutoRows = "1fr"; 
-    gridContainer.style.gridAutoColumns = "1fr";
+    console.log(model.get("grid_template_areas"));
 
     // Función para manejar el estilo (tema)
     const updateStyle = () => {
         const style = model.get("style") || "basic";
-        gridContainer.className = style; 
+        node.className = style; 
     };
 
-    el.appendChild(gridContainer);
-    
 
     async function updateLayout() {
         // Limpiar el contenedor antes de renderizar para evitar duplicados
-        gridContainer.innerHTML = "";
-        
-        gridContainer.style.gridTemplateAreas = model.get("grid_template_areas");
+        node.innerHTML = "";
 
         const children = model.get("children") || [];
         const widgetAreas = model.get("widget_areas") || {};
@@ -44,28 +46,13 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
             const areaName = widgetAreas[modelId];
 
             // Nuevo widget
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("vp-dashboard-div"); 
-            wrapper.dataset.widgetId = modelId;
-            
-            wrapper.style.minHeight = "0"; 
-            wrapper.style.minWidth = "0";
-                
-            wrapper.style.height = "100%";
-            wrapper.style.width = "100%";
+            const grid_area = document.createElement("div");
+            grid_area.setAttribute("id", modelId);
+            grid_area.style.gridArea = areaName || "none";
+            grid_area.classList.add("vp-dashboard-div");
 
-            wrapper.style.overflow = "hidden"; 
-            
-            // Asignar al grid-area correspondiente
-            if (areaName) {
-                wrapper.style.gridArea = areaName;
-                wrapper.style.display = "block";
-            } else {
-                wrapper.style.display = "none";
-            }
-
-            // Agregar al DOM inmediatamente (sincrónico) para mantener el orden
-            gridContainer.appendChild(wrapper);
+            // Agregar al DOM antes de crear la vista para que tenga dimensiones reales
+            node.appendChild(grid_area);
 
             try {
                 // Usar el widget manager del modelo anywidget (Asíncrono)
@@ -73,7 +60,7 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
                 console.log("Creating view for", modelId, childModel);
                 if (childModel) {
                     const view = await model.widget_manager.create_view(childModel);
-                    wrapper.appendChild(view.el);
+                    grid_area.appendChild(view.el);
                 }
             } catch (err) {
                 console.error("Error creating view for", modelId, err);
@@ -83,21 +70,21 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
         // Esperar a que todas las vistas se carguen
         await Promise.all(promises);
     }
-
+    
     // Suscripciones
     model.on("change:children", updateLayout);
     model.on("change:widget_areas", updateLayout);
     model.on("change:style", updateStyle); 
     model.on("change:grid_template_areas", () => {
-        gridContainer.style.gridTemplateAreas = model.get("grid_template_areas");
+        node.style.gridTemplateAreas = model.get("grid_template_areas");
     });
     
     // Render inicial
     updateStyle();
+    el.appendChild(node);
     await updateLayout();
-
     return () => {
-        gridContainer.remove();
+        node.remove();
     };
 }
 

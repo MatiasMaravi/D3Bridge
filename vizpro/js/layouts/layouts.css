@@ -230,39 +230,95 @@
     }
 }
 
+/* === Dashboard Div Base === */
+.vp-dashboard-div {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.vp-dashboard-div > * {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 /* === Matrix Layout Themes === */
 
+/* --- Basic --- */
+.basic {
+  gap: 0px;
+}
 .basic .vp-dashboard-div {
-  border: 1px solid black;
-  text-align: center;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
 }
 
+/* --- Dark --- */
+.dark {
+  gap: 4px;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 4px;
+}
 .dark .vp-dashboard-div {
-  margin: 2px;
   border-radius: 10px;
   background-color: #262626;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.dark .vp-dashboard-div,
+.dark .vp-dashboard-div * {
+  color: #e0e0e0;
+  fill: #e0e0e0;
+}
+.dark .vp-dashboard-div line,
+.dark .vp-dashboard-div .domain {
+  stroke: #555;
 }
 
+/* --- Glassmorphism --- */
+.glassmorphism {
+  gap: 8px;
+  background: linear-gradient(135deg, #e0e7ff, #f8e8ff);
+  border-radius: 16px;
+  padding: 8px;
+}
 .glassmorphism .vp-dashboard-div {
-  margin: 5px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(31, 38, 135, 0.15);
 }
 
-.neumorphism .vp-dashboard-div {
-  margin: 10px;
-  border-radius: 15px;
+/* --- Neumorphism --- */
+.neumorphism {
+  gap: 12px;
   background-color: #e0e0e0;
-  box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+  border-radius: 20px;
+  padding: 12px;
+}
+.neumorphism .vp-dashboard-div {
+  border-radius: 16px;
+  background-color: #e0e0e0;
+  box-shadow: 6px 6px 12px #bebebe, -6px -6px 12px #ffffff;
 }
 
+/* --- Minimalism --- */
+.minimalism {
+  gap: 0px;
+}
 .minimalism .vp-dashboard-div {
-  margin-bottom: 5px;
   border-bottom: 1px solid #eee;
+}
+.minimalism .vp-dashboard-div:last-child {
+  border-bottom: none;
 }

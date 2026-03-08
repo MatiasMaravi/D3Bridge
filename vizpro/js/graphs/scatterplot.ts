@@ -1,6 +1,6 @@
 import type { RenderProps } from "@anywidget/types";
 import * as d3 from "d3";
-import { BasePlot, MARGIN, DEFAULT_HEIGHT } from "./base_plot";
+import { BasePlot, MARGIN } from "./base_plot";
 import "./scatterplot.css";
 
 interface ScatterPlotModel {
@@ -37,9 +37,6 @@ class ScatterPlot extends BasePlot {
         this.y_ = model.get("y");
         this.hue_ = model.get("hue") || "";
         this.palette_ = model.get("palette") || d3.schemeCategory10;
-        // Actualizar altura si se proporciona
-        this.height = model.get("height") || DEFAULT_HEIGHT;
-        this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
     }
 
     private createTooltip(): void {

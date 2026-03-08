@@ -2,9 +2,9 @@ import type { AnyModel } from "@anywidget/types";
 import * as d3 from "d3";
 
 // Configuración de márgenes y dimensiones por defecto
-const MARGIN = { top: 30, right: 30, bottom: 50, left: 60 };
+const MARGIN = { top: 20, right: 40, bottom: 40, left: 40 };
 const DEFAULT_WIDTH = 600;
-const DEFAULT_HEIGHT = 400;
+const DEFAULT_HEIGHT = 300;
 
 // Interfaz para el modelo base
 interface BaseModel {
@@ -29,21 +29,33 @@ class BasePlot {
     protected g: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
     protected resizeObserver: ResizeObserver;
 
+    private resizeTimer: number | null = null;
+
     constructor(el: HTMLElement, model: AnyModel<BaseModel>) {
         this.el = el;
         this.model = model;
         this.width = this.el.clientWidth || DEFAULT_WIDTH;
-        this.height = DEFAULT_HEIGHT;
+        this.height = this.el.clientHeight || DEFAULT_HEIGHT;
         this.innerWidth = this.width - MARGIN.left - MARGIN.right;
         this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
         
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 const newWidth = entry.contentRect.width;
-                if (newWidth > 0 && newWidth !== this.width) {
-                    this.width = newWidth;
-                    this.innerWidth = this.width - MARGIN.left - MARGIN.right;
-                    this.render();
+                const newHeight = entry.contentRect.height;
+                const widthChanged = newWidth > 0 && Math.abs(newWidth - this.width) > 5;
+                const heightChanged = newHeight > 0 && Math.abs(newHeight - this.height) > 5;
+                if (widthChanged || heightChanged) {
+                    if (this.resizeTimer){
+                        clearTimeout(this.resizeTimer);
+                    }
+                    this.resizeTimer = window.setTimeout(() => {
+                        this.width = newWidth;
+                        this.height = newHeight;
+                        this.innerWidth = this.width - MARGIN.left - MARGIN.right;
+                        this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
+                        this.render();
+                    }, 200);
                 }
             }
         });
@@ -55,11 +67,19 @@ class BasePlot {
      * @param cssClass Clase CSS para el SVG
      */
     protected createSvg(cssClass: string): void {
+        // Re-medir dimensiones del contenedor antes de crear el SVG
+        const currentWidth = this.el.clientWidth;
+        const currentHeight = this.el.clientHeight;
+        if (currentWidth > 0) this.width = currentWidth;
+        if (currentHeight > 0) this.height = currentHeight;
+        this.innerWidth = this.width - MARGIN.left - MARGIN.right;
+        this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
+
         d3.select(this.el).selectAll("*").remove();
         
         this.svg = d3.select(this.el)
             .append("svg")
-            .attr("width", this.width)
+            .attr("width", "100%")
             .attr("height", this.height)
             .attr("class", cssClass);
 
