@@ -206,21 +206,7 @@ function plot(data) {
     legendItems[labelNum] = entry;
   });
 
-  // Leyenda de gradiente temporal
-  const gradLegend = container.append("div")
-    .attr("class", "gradient-legend")
-    .style("margin-top", "8px")
-    .style("display", "flex")
-    .style("align-items", "center")
-    .style("gap", "10px");
 
-  gradLegend.append("span").text("first layer");
-  gradLegend.append("div")
-    .style("width", "150px")
-    .style("height", "12px")
-    .style("background", "linear-gradient(to right, rgba(0,0,0,0.10), rgba(0,0,0,1))")
-    .style("border-radius", "6px");
-  gradLegend.append("span").text("current layer");
 
   // ============================================================
   // TOOLTIP
@@ -240,7 +226,7 @@ function plot(data) {
     const [mx, my] = d3.pointer(event, container.node());
     tooltip
       .style("opacity", 1)
-      .html(`Label: <b>${d.label}</b>`)
+      .html(`ID: <b>${d.id}</b> | Label: <b>${d.label}</b>`)
       .style("left", `${mx + 10}px`)
       .style("top", `${my - 10}px`);
   };
