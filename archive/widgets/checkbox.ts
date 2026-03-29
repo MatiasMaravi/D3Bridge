@@ -2,7 +2,7 @@ import type { RenderProps } from "@anywidget/types";
 
 import "./widgets.css";
 
-/* Specifies attributes defined with traitlets in ../src/vizpro/widgets.py */
+/* Specifies attributes defined with traitlets in ../src/D3Bridge/widgets.py */
 interface CheckboxModel {
     description: string;
     disabled: boolean;
@@ -83,7 +83,7 @@ class Checkbox {
 }
 
 function render({ model, el }: RenderProps<CheckboxModel>) {
-    el.classList.add("vizpro");
+    el.classList.add("D3Bridge");
 
     const widget = new Checkbox(el);
 
