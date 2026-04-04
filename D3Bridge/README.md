@@ -1,15 +1,15 @@
-# vizpro
+# D3Bridge
 
 ## Installation
 
 ```sh
-pip install vizpro
+pip install D3Bridge
 ```
 
 or with [uv](https://github.com/astral-sh/uv):
 
 ```sh
-uv add vizpro
+uv add D3Bridge
 ```
 
 ## Development

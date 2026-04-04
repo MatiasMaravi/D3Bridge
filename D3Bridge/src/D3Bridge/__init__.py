@@ -2,7 +2,7 @@ import importlib.metadata
 
 
 try:
-    __version__ = importlib.metadata.version("vizpro")
+    __version__ = importlib.metadata.version("D3Bridge")
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
     

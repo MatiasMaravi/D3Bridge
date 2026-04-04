@@ -2,7 +2,7 @@ import type { RenderProps } from "@anywidget/types";
 
 import "./widgets.css";
 
-/* Specifies attributes defined with traitlets in ../src/vizpro/widgets.py */
+/* Specifies attributes defined with traitlets in ../src/D3Bridge/widgets.py */
 interface ButtonModel {
 	description: string;
 	disabled: boolean;
@@ -54,7 +54,7 @@ class Button {
 }
 
 function render({ model, el }: RenderProps<ButtonModel>) {
-	el.classList.add("vizpro");
+	el.classList.add("D3Bridge");
 
 	const widget = new Button(el);
 

@@ -7,4 +7,4 @@ dist
 __pycache__
 .ipynb_checkpoints
 
-src/vizpro/static
+src/D3Bridge/static

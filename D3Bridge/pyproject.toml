@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vizpro"
+name = "D3Bridge"
 version = "0.0.0"
 dependencies = ["anywidget"]
 readme = "README.md"
@@ -22,21 +22,21 @@ dev = ["watchfiles", "jupyterlab"]
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["src/vizpro/static/*"]
+artifacts = ["src/D3Bridge/static/*"]
 
 [tool.hatch.build.hooks.jupyter-builder]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "src/vizpro/static/layouts/matrix_creator.js",
-    "src/vizpro/static/layouts/matrix_layout.js",
-    "src/vizpro/static/widgets/range_double.js",
-    "src/vizpro/static/widgets/swatches.js"
+    "src/D3Bridge/static/layouts/matrix_creator.js",
+    "src/D3Bridge/static/layouts/matrix_layout.js",
+    "src/D3Bridge/static/widgets/range_double.js",
+    "src/D3Bridge/static/widgets/swatches.js"
 ]
 skip-if-exists = [
-    "src/vizpro/static/layouts/matrix_creator.js",
-    "src/vizpro/static/layouts/matrix_layout.js",
-    "src/vizpro/static/widgets/range_double.js",
-    "src/vizpro/static/widgets/swatches.js"
+    "src/D3Bridge/static/layouts/matrix_creator.js",
+    "src/D3Bridge/static/layouts/matrix_layout.js",
+    "src/D3Bridge/static/widgets/range_double.js",
+    "src/D3Bridge/static/widgets/swatches.js"
 ]
 dependencies = ["hatch-jupyter-builder>=0.5.0"]
 

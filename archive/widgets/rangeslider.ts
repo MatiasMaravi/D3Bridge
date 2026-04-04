@@ -198,7 +198,7 @@ class RangeSlider {
 }
 
 function render({ model, el }: RenderProps<RangeSliderModel>) {
-    el.classList.add("vizpro");
+    el.classList.add("D3Bridge");
     const widget = new RangeSlider(el);
 
     const setFromTo = (from: number, to: number) => {
