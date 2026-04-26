@@ -23,7 +23,6 @@ class RidgelinePlot extends BasePlot {
         this.x_axes_ = model.get("x_axes") || [];
         this.bins_ = model.get("bins") || 20;
 
-        // Actualizar altura si se proporciona
         this.height = model.get("height") || DEFAULT_HEIGHT;
         this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
     }
@@ -58,12 +57,10 @@ class RidgelinePlot extends BasePlot {
         const bins = this.createHistogramBins(xAxis, xScale);
         const ridgeHeight = yScale.bandwidth();
 
-        // Escala Y local para este ridgeline
         const localYScale = d3.scaleLinear()
             .domain([0, maxBinLength])
             .range([ridgeHeight, 0]);
 
-        // Crear el área
         const area = d3.area<any>()
             .curve(d3.curveBasis)
             .x(d => xScale((d.x0 + d.x1) / 2))
@@ -78,31 +75,25 @@ class RidgelinePlot extends BasePlot {
             .datum(bins)
             .attr("class", "ridgeline-area")
             .attr("d", area)
-            .style("fill", d3.schemeCategory10[index % 10])
-            .style("opacity", 0.7)
-            .on("mouseover", function() {
-                d3.select(this).style("opacity", 1);
-            })
-            .on("mouseout", function() {
-                d3.select(this).style("opacity", 0.7);
-            });
+            .style("fill", d3.schemeCategory10[index % 10]);
 
-        // Etiqueta del eje
-            ridgeGroup.append("text")
-                .attr("class", "ridge-label")
-                .attr("x", -5)
-                .attr("y", ridgeHeight / 2)
-                .attr("dy", "0.35em")
-                .attr("text-anchor", "end")
-                .text(xAxis)
-                .style("font-size", "12px");
+        const maxLabelLength = 12;
+        const truncatedLabel = xAxis.length > maxLabelLength 
+                ? xAxis.substring(0, maxLabelLength) + "..."
+                : xAxis;
+        ridgeGroup.append("text")
+            .attr("class", "ridge-label")
+            .attr("x", truncatedLabel.length - 20)
+            .attr("y", ridgeHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr("transform", `rotate(-50, -20, ${ridgeHeight / 2})`)
+            .text(truncatedLabel);
     }
 
     public createRidgelinePlot(): void {
-        // Crear SVG usando método heredado
         this.createSvg("ridgelineplot-svg");
 
-        // Escalas
+        // Scales
         const xDomain = this.getXDomain();
         const xScale = d3.scaleLinear()
             .domain(xDomain)
@@ -114,7 +105,7 @@ class RidgelinePlot extends BasePlot {
             .range([0, this.innerHeight])
             .padding(0.2);
 
-        // Calcular el máximo de todas las bins para escalar uniformemente
+        // Calculate the maximum of all bins to scale uniformly
         let maxBinLength = 0;
         for (const xAxis of this.x_axes_) {
             const bins = this.createHistogramBins(xAxis, xScale);
@@ -122,24 +113,23 @@ class RidgelinePlot extends BasePlot {
             maxBinLength = Math.max(maxBinLength, localMax);
         }
 
-        // Crear cada ridgeline
+        // Create ridgelines for each axis
         this.x_axes_.forEach((xAxis, index) => {
             this.createRidgeline(this.g!, xAxis, xScale, yScale, maxBinLength, index);
         });
 
-        // Eje X
-            this.g!.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", `translate(0,${this.innerHeight})`)
-                .call(d3.axisBottom(xScale));
+        // X-axis
+        this.g!.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${this.innerHeight})`)
+            .call(d3.axisBottom(xScale));
 
-            this.g!.append("text")
-                .attr("class", "x-label")
-                .attr("x", this.innerWidth / 2)
-                .attr("y", this.innerHeight + MARGIN.bottom - 10)
-                .attr("text-anchor", "middle")
-                .text("Value")
-                .style("font-size", "14px");
+        this.g!.append("text")
+            .attr("class", "x-label")
+            .attr("x", this.innerWidth / 2)
+            .attr("y", this.innerHeight + MARGIN.bottom - 10)
+            .attr("text-anchor", "middle")
+            .text("Value");
     }
 
     public render(): void {
@@ -157,7 +147,6 @@ function render({ el, model }: RenderProps<RidgelinePlotModel>): (() => void) | 
     const plot = new RidgelinePlot(el, model);
     plot.render();
 
-    // Listeners para actualizar el gráfico cuando cambien las propiedades
     model.on("change:x_axes_", () => plot.render());
     model.on("change:showAxes_", () => plot.render());
     model.on("change:data", () => plot.render());

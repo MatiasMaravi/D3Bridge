@@ -17,13 +17,12 @@ interface ScatterPlotModel {
 }
 
 class ScatterPlot extends BasePlot {
-    private readonly x_: string;
-    private readonly y_: string;
-    private readonly hue_: string;
-    private readonly palette_: string[];
-    private readonly data: any[];
+    private x_: string;
+    private y_: string;
+    private hue_: string;
+    private palette_: string[];
+    private data: any[];
 
-    // Referencias a elementos D3
     private xScale: d3.ScaleLinear<number, number> | null = null;
     private yScale: d3.ScaleLinear<number, number> | null = null;
     private xAxis: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
@@ -105,7 +104,6 @@ class ScatterPlot extends BasePlot {
 
         if (this.g) {
             const selected = this.g.selectAll(".dot.selected").data();
-            // Enviar los valores seleccionados a Python
             this.model.set("selected_values_records", selected);
             this.model.save_changes();
 
@@ -141,12 +139,11 @@ class ScatterPlot extends BasePlot {
     }
 
     public createScatterPlot(): void {
-        // Crear SVG usando método heredado
         this.createSvg("scatterplot-svg");
 
         this.createTooltip();
 
-        // Escalas
+        // Scales
         const xExtent = d3.extent(this.data, d => d[this.x_]) as [number, number];
         const yExtent = d3.extent(this.data, d => d[this.y_]) as [number, number];
 
@@ -160,39 +157,36 @@ class ScatterPlot extends BasePlot {
             .nice()
             .range([this.innerHeight, 0]);
 
-        // Color scale
         const colorScale = this.getColorScale();
 
-        // Ejes
-            this.xAxis = this.g!.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", `translate(0,${this.innerHeight})`)
-                .call(d3.axisBottom(this.xScale));
+        // Axes
+        this.xAxis = this.g!.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${this.innerHeight})`)
+            .call(d3.axisBottom(this.xScale));
 
-            this.yAxis = this.g!.append("g")
-                .attr("class", "y-axis")
-                .call(d3.axisLeft(this.yScale));
+        this.yAxis = this.g!.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(this.yScale));
 
-            // Etiquetas
-            this.g!.append("text")
-                .attr("class", "x-label")
-                .attr("x", this.innerWidth / 2)
-                .attr("y", this.innerHeight + MARGIN.bottom - 10)
-                .attr("text-anchor", "middle")
-                .text(this.x_);
+        // Etiquetas
+        this.g!.append("text")
+            .attr("class", "x-label")
+            .attr("x", this.innerWidth / 2)
+            .attr("y", this.innerHeight + MARGIN.bottom - 10)
+            .attr("text-anchor", "middle")
+            .text(this.x_);
 
-            this.g!.append("text")
-                .attr("class", "y-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -MARGIN.left + 15)
-                .attr("x", -this.innerHeight / 2)
-                .attr("text-anchor", "middle")
-                .text(this.y_);
+        this.g!.append("text")
+            .attr("class", "y-label")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -MARGIN.left + 10)
+            .attr("x", -this.innerHeight / 2)
+            .attr("text-anchor", "middle")
+            .text(this.y_);
 
-        // Puntos
         this.createDots(colorScale);
 
-        // Leyenda
         if (this.hue_) {
             this.createLegend(colorScale.domain(), colorScale);
         }
@@ -216,7 +210,6 @@ function render({ el, model }: RenderProps<ScatterPlotModel>): (() => void) | vo
     const plot = new ScatterPlot(el, model);
     plot.render();
 
-    // Listeners para actualizar el gráfico cuando cambien las propiedades
     model.on("change:x_", () => plot.render());
     model.on("change:y_", () => plot.render());
     model.on("change:hue_", () => plot.render());

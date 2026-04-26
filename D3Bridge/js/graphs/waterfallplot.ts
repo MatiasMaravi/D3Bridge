@@ -11,9 +11,9 @@ const POSITIVE_COLOR = "#FF335B";
 const X_KEY = "values";
 const Y_KEY = "feature_names";
 const Z_KEY = "data";
-const BAR_HEIGHT_PX = 40; // altura por fila
+const BAR_HEIGHT_PX = 40;
 
-// Ordena por valor absoluto escalar (shap_plot.absoluteSort opera sobre arrays)
+// Sort by absolute value (shap_plot.absoluteSort operates on arrays)
 function sortByAbsValue(property: string, ascending: boolean): (a: any, b: any) => number {
     let order = ascending ? -1 : 1;
     return function (a, b) {
@@ -84,7 +84,6 @@ function getColor(xStart: number, xEnd: number): string {
 class WaterfallPlot extends ShapPlot {
 
     public render(): void {
-        // 1. Limpieza previa
         d3.select(this.el).selectAll("*").remove();
 
         const data: ShapRecord[] = [...(this.model.get("data") || [])];
@@ -93,7 +92,6 @@ class WaterfallPlot extends ShapPlot {
         const y_ = Y_KEY;
         const z_ = Z_KEY;
 
-        // Altura dinámica según número de features
         this.height = Math.max(
             DEFAULT_SINGLE_HEIGHT,
             data.length * BAR_HEIGHT_PX + WATERFALL_MARGIN.top + WATERFALL_MARGIN.bottom
@@ -113,7 +111,7 @@ class WaterfallPlot extends ShapPlot {
         const g = svg.append("g")
             .attr("transform", `translate(${WATERFALL_MARGIN.left},${WATERFALL_MARGIN.top})`);
 
-        // Escalas
+        // Scales
         const xDomain = getDomain(data, x_, baseValue);
         const xScale = d3.scaleLinear()
             .domain(xDomain)
@@ -125,7 +123,7 @@ class WaterfallPlot extends ShapPlot {
             .range([0, innerHeight])
             .padding(0.2);
 
-        // Ejes
+        // Axes
         g.append("g")
             .attr("class", "x-axis")
             .attr("transform", `translate(0,${innerHeight})`)
@@ -155,7 +153,6 @@ class WaterfallPlot extends ShapPlot {
             call_update_selected();
         };
 
-        // Barras (polígonos)
         let startingPoint = baseValue;
         g.selectAll(".polygon")
             .data(data)
@@ -172,7 +169,7 @@ class WaterfallPlot extends ShapPlot {
             .attr("cursor", "pointer")
             .on("click", handleClick);
 
-        // Líneas conectoras
+        // Connective lines
         startingPoint = baseValue;
         g.selectAll(".waterfall-connector")
             .data(data)
@@ -189,7 +186,7 @@ class WaterfallPlot extends ShapPlot {
                 ]);
             });
 
-        // Etiquetas de valores
+        // Value labels
         const textMaxWidth = 50;
         startingPoint = baseValue;
         const labels = g.selectAll(".waterfall-label-group")
@@ -224,7 +221,6 @@ class WaterfallPlot extends ShapPlot {
                 return d[x_] >= 0 ? "+" + text : text;
             });
 
-        // Resultado final
         g.append("text")
             .attr("class", "waterfall-result")
             .attr("x", xScale(startingPoint) - 10)

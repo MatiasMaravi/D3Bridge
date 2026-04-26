@@ -102,7 +102,7 @@ class HeatmapPlot {
 
         d3.select(this.el).selectAll("*").remove();
 
-        // Crear tooltip
+        // Create tooltip
         const tooltip = d3.select(this.el)
             .append("div")
             .attr("class", "heatmap-tooltip")

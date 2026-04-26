@@ -1,9 +1,8 @@
 import type { AnyModel } from "@anywidget/types";
 import * as d3 from "d3";
 
-// Configuración de márgenes y dimensiones por defecto
 const MARGIN = { top: 20, right: 20, bottom: 40, left: 30 };
-const DEFAULT_WIDTH = 800;//Cambiar a el ancho del widget
+const DEFAULT_WIDTH = 800;
 const DEFAULT_HEIGHT = 600;
 const DEFAULT_SINGLE_HEIGHT = 200;
 
@@ -54,7 +53,7 @@ function absoluteSort(property: string, ascending: boolean) {
         return result * sortOrder;
     };
 }
-// Helper para medir texto sin renderizarlo en el DOM (muy rápido)
+// Helper to measure text width without rendering it in the DOM (very fast)
 function getTextWidth(text: string) {
     const fontSize = "12px";
     const fontFamily = "sans-serif";
@@ -132,10 +131,9 @@ class ShapMultiPlot {
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 const newWidth = entry.contentRect.width;
-                // Verificamos que el ancho haya cambiado realmente y sea válido
                 if (newWidth > 0 && Math.abs(newWidth - this.width) > 5) {
                     this.width = newWidth;
-                    this.render(); // Redibujar
+                    this.render();
                 }
             }
         });
@@ -157,7 +155,7 @@ class ShapMultiPlot {
         });
         this.set_selected_values(filteredData);
     };
-    // Método para renderizar que será sobrecargado por las clases hijas
+    // Method to render that will be overridden by child classes
     public render() {}
 }
 
@@ -179,10 +177,9 @@ class ShapPlot {
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 const newWidth = entry.contentRect.width;
-                // Verificamos que el ancho haya cambiado realmente y sea válido
                 if (newWidth > 0 && Math.abs(newWidth - this.width) > 5) {
                     this.width = newWidth;
-                    this.render(); // Redibujar
+                    this.render();
                 }
             }
         });
@@ -193,7 +190,7 @@ class ShapPlot {
         this.model.save_changes();
     }
 
-    // Método para renderizar que será sobrecargado por las clases hijas
+    // Method to render that will be overridden by child classes
     public render() {}
 }
 

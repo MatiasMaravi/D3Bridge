@@ -5,7 +5,7 @@ import "./histogramplot.css";
 
 class HistogramPlot extends BasePlot {
 
-    // Procesa los datos y crea los bins del histograma
+    // Process data to create bins for the histogram
     private processBins(): d3.Bin<any, number>[] {
         const x_ = this.model.get("x") || "";
         const data = this.model.get("data") || [];
@@ -17,7 +17,7 @@ class HistogramPlot extends BasePlot {
         return bins;
     }
 
-    // Obtiene el dominio X basado en los datos
+    // Get the X domain based on the data
     private getXDomain(): [number, number] {
         const x_ = this.model.get("x") || "";
         const data = this.model.get("data") || [];
@@ -25,29 +25,28 @@ class HistogramPlot extends BasePlot {
         return extent as [number, number];
     }
 
-    // Crea el histograma
     public createHistogram(): void {
         const bins = this.processBins();
         const xDomain = this.getXDomain();
         const x_ = this.model.get("x") || "";
         const color = this.model.get("color") || "steelblue";
 
-        // Crear SVG usando el método heredado
+        // Create SVG using the inherited method
         this.createSvg("histogramplot-svg");
 
-        // Escala X (valores continuos)
+        // X Scale (continuous values)
         const xScale = d3.scaleLinear()
             .domain(xDomain)
             .range([0, this.innerWidth]);
 
-        // Escala Y (frecuencia de los bins)
+        // Y Scale (frequency of the bins)
         const maxFrequency = d3.max(bins, (d) => d.length) || 0;
         const yScale = d3.scaleLinear()
             .domain([0, maxFrequency])
             .nice()
             .range([this.innerHeight, 0]);
 
-        // Dibujar barras del histograma
+        // Draw histogram bars
         this.g!.append("g")
             .attr("class", "histogram-bars")
             .selectAll("rect")
@@ -60,7 +59,7 @@ class HistogramPlot extends BasePlot {
             .attr("height", (d) => this.innerHeight - yScale(d.length))
             .attr("fill", color);
 
-        // Crear ejes usando los métodos heredados
+        // Create axes using the inherited methods
         this.createXAxis(xScale, x_);
         this.createYAxis(yScale, "Frequency");
     }

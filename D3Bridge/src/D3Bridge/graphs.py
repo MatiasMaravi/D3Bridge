@@ -22,9 +22,9 @@ class BarPlot(anywidget.AnyWidget):
         self.data = data
         self.x = x
         self.y = y
-        self.hue = hue #Javascript maneja el nulo
+        self.hue = hue
         self.direction = direction
-        self.palette = palette #Javascript maneja el nulo
+        self.palette = palette
     
 
 class BeeswarmPlot(anywidget.AnyWidget):

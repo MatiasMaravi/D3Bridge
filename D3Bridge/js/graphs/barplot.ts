@@ -37,13 +37,12 @@ class BarPlot extends BasePlot {
         return result;
     }
 
-    // Obtiene las categorías únicas
+    // Get unique categories
     private getCategories(): string[] {
         const data = this.model.get("data") || [];
         const x_ = this.model.get("x");
         const unique = [...new Set(data.map((d) => String(d[x_])))];
         
-        // Ordenar correctamente (numérico o alfabético) para evitar ejes desordenados
         unique.sort((a, b) => {
             const numA = parseFloat(a);
             const numB = parseFloat(b);
@@ -56,7 +55,7 @@ class BarPlot extends BasePlot {
         return unique;
     }
 
-    // Obtiene los valores únicos de hue
+    // Get unique values for the hue variable
     private getHueValues(): string[] {
         const hue_ = this.model.get("hue");
         if (!hue_) return [];
@@ -69,44 +68,44 @@ class BarPlot extends BasePlot {
         const categories = this.getCategories();
         const hueValues = this.getHueValues();
 
-        // Crear SVG usando el método heredado
+        // Create SVG using the inherited method
         this.createSvg("barplot-svg");
 
         const palette = this.model.get("palette") || d3.schemeCategory10;
         const y_ = this.model.get("y") || "";
         const hue_ = this.model.get("hue") || "";
 
-        // Escala X (categorías)
+        // X Scale (categories)
         const xScale = d3.scaleBand()
             .domain(categories)
             .range([0, this.innerWidth])
             .padding(0.2);
 
-        // Escala X para subgrupos (hue)
+        // X Scale for subgroups (hue)
         const xSubScale = d3.scaleBand()
             .domain(hueValues.length > 0 ? hueValues : ["default"])
             .range([0, xScale.bandwidth()])
             .padding(0.05);
 
-        // Escala Y (valores numéricos)
+        // Y Scale (numeric values)
         const maxValue = d3.max(preparedData, d => d.value + (d.sd || 0)) || 0;
         const yScale = d3.scaleLinear()
             .domain([0, maxValue * 1.1])
             .nice()
             .range([this.innerHeight, 0]);
 
-        // Escala de colores
+        // Color Scale
         const colorScale = d3.scaleOrdinal<string>()
             .domain(hueValues.length > 0 ? hueValues : ["default"])
             .range(palette);
 
-        // Crear ejes usando métodos heredados
+        // Create axes using inherited methods
         this.createXAxis(xScale, undefined, true);
         this.createYAxis(yScale, y_ || "Y Axis");
 
-        // Dibujar barras
+        // Draw bars
         if (hue_) {
-            // Con agrupación por hue
+            // With grouping by hue
             const categoryGroups = this.g!.selectAll(".category-group")
                 .data(categories)
                 .enter()
@@ -128,7 +127,7 @@ class BarPlot extends BasePlot {
                 .attr("height", d => this.innerHeight - yScale(d.value))
                 .attr("fill", d => colorScale(d.hue || "default"));
             
-            // Líneas de desviación estándar
+            // Lines for standard deviation
             groups.append("line")
                 .attr("class", "error-line")
                 .attr("x1", xSubScale.bandwidth() / 2)
@@ -140,7 +139,7 @@ class BarPlot extends BasePlot {
 
 
         } else {
-            // Sin hue
+            // Without hue
             const bars = this.g!.selectAll(".bar-group")
                 .data(preparedData)
                 .enter()
@@ -155,7 +154,7 @@ class BarPlot extends BasePlot {
                 .attr("height", d => this.innerHeight - yScale(d.value))
                 .attr("fill", (_d, i) => palette[i % palette.length]);
 
-            // Líneas de desviación estándar
+            // LLines for standard deviation
             bars.append("line")
                 .attr("class", "error-line")
                 .attr("x1", xScale.bandwidth() / 2)
@@ -167,7 +166,7 @@ class BarPlot extends BasePlot {
 
         }
 
-        // Leyenda si hay hue
+        // Legend if hue is specified
         if (hue_ && hueValues.length > 0) {
             this.createLegend(hueValues, colorScale);
         }
@@ -178,40 +177,40 @@ class BarPlot extends BasePlot {
         const categories = this.getCategories();
         const hueValues = this.getHueValues();
 
-        // Crear SVG usando el método heredado
+        // Create SVG using the inherited method
         this.createSvg("barplot-svg");
 
         const palette = this.model.get("palette") || d3.schemeCategory10;
         const y_ = this.model.get("y") || "";
         const hue_ = this.model.get("hue") || "";
 
-        // Escala Y (categorías - en horizontal, las categorías van en Y)
+        // Y Scale (categories - horizontal, categories go on Y)
         const yScale = d3.scaleBand()
             .domain(categories)
             .range([0, this.innerHeight])
             .padding(0.2);
 
-        // Escala Y para subgrupos (hue)
+        // Y Scale for subgroups (hue)
         const ySubScale = d3.scaleBand()
             .domain(hueValues.length > 0 ? hueValues : ["default"])
             .range([0, yScale.bandwidth()])
             .padding(0.05);
 
-        // Escala X (valores numéricos - en horizontal, los valores van en X)
+        // X Scale (numeric values - horizontal, values go on X)
         const maxValue = d3.max(preparedData, d => d.value + (d.sd || 0)) || 0;
         const xScale = d3.scaleLinear()
             .domain([0, maxValue * 1.1])
             .nice()
             .range([0, this.innerWidth]);
 
-        // Escala de colores
+        // Color Scale
         const colorScale = d3.scaleOrdinal<string>()
             .domain(hueValues.length > 0 ? hueValues : ["default"])
             .range(palette);
 
-        // Dibujar barras horizontales
+        // Draw horizontal bars
         if (hue_) {
-            // Con agrupación por hue
+            // With grouping by hue
             const categoryGroups = this.g!.selectAll(".category-group")
                 .data(categories)
                 .enter()
@@ -233,7 +232,7 @@ class BarPlot extends BasePlot {
                 .attr("height", ySubScale.bandwidth())
                 .attr("fill", d => colorScale(d.hue || "default"));
 
-            // Líneas de desviación estándar
+            // Lines for standard deviation
             groups.append("line")
                 .attr("class", "error-line")
                 .attr("x1", d => xScale(d.value - (d.sd || 0)))
@@ -245,7 +244,7 @@ class BarPlot extends BasePlot {
 
 
         } else {
-            // Sin hue
+            // Without hue
             const bars = this.g!.selectAll(".bar-group")
                 .data(preparedData)
                 .enter()
@@ -260,7 +259,7 @@ class BarPlot extends BasePlot {
                 .attr("height", yScale.bandwidth())
                 .attr("fill", (_d, i) => palette[i % palette.length]);
 
-             // Líneas de desviación estándar
+             // Lines for standard deviation
              bars.append("line")
                 .attr("class", "error-line")
                 .attr("x1", d => xScale(d.value - (d.sd || 0)))
@@ -272,11 +271,11 @@ class BarPlot extends BasePlot {
 
         }
 
-        // Crear ejes usando métodos heredados
+        // Create axes using inherited methods
         this.createXAxis(xScale, y_ || "X Axis");
         this.createYAxis(yScale);
 
-        // Leyenda si hay hue
+        // Legend if hue is specified
         if (hue_ && hueValues.length > 0) {
             this.createLegend(hueValues, colorScale);
         }

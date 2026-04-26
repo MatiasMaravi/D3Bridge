@@ -1,21 +1,19 @@
 import type { AnyModel } from "@anywidget/types";
 import * as d3 from "d3";
 
-// Configuración de márgenes y dimensiones por defecto
 const MARGIN = { top: 20, right: 40, bottom: 40, left: 40 };
 const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 300;
 
-// Interfaz para el modelo base
 interface BaseModel {
     x: string; // x-axis column name
     y: string; // y-axis column name
     hue?: string; // hue column name
-    direction?: "vertical" | "horizontal"; // dirección de las barras (para BarPlot)
-    palette?: string[]; // paleta de colores para las barras
-    color?: string; // color único (si no se usa palette)
-    data?: any[]; // datos para la gráfica
-    selected_values_records?: any[]; // registros seleccionados (para interactividad)
+    direction?: "vertical" | "horizontal"; // Direction of the plot (barplot)
+    palette?: string[]; // color palette (if not using a single color)
+    color?: string; // Unique color for the plot (HistogramPlot) 
+    data?: any[]; // data records
+    selected_values_records?: any[]; // selected records (used for interactivity)
 }
 
 class BasePlot {
@@ -63,11 +61,10 @@ class BasePlot {
     }
 
     /**
-     * Limpia el contenedor y crea el SVG base con el grupo transformado
-     * @param cssClass Clase CSS para el SVG
+     * Cleans the container and creates the base SVG with the transformed group
+     * @param cssClass Class CSS to apply to the SVG element for styling purposes
      */
     protected createSvg(cssClass: string): void {
-        // Re-medir dimensiones del contenedor antes de crear el SVG
         const currentWidth = this.el.clientWidth;
         const currentHeight = this.el.clientHeight;
         if (currentWidth > 0) this.width = currentWidth;
@@ -91,10 +88,10 @@ class BasePlot {
     }
 
     /**
-     * Crea el eje X
-     * @param scale Escala D3 para el eje
-     * @param label Etiqueta del eje (opcional)
-     * @param rotate Si es true, rota las etiquetas -45 grados
+     * Creates the X-axis
+     * @param scale Scale D3 for the axis
+     * @param label Label for the axis (optional)
+     * @param rotate If true, rotates the labels by -45 degrees
      */
     protected createXAxis(
         scale: d3.AxisScale<any>,
@@ -125,9 +122,9 @@ class BasePlot {
     }
 
     /**
-     * Crea el eje Y
-     * @param scale Escala D3 para el eje
-     * @param label Etiqueta del eje (opcional)
+     * Creates the Y-axis
+     * @param scale Scale D3 for the axis
+     * @param label Label for the axis (optional)
      */
     protected createYAxis(
         scale: d3.AxisScale<any>,
@@ -151,9 +148,9 @@ class BasePlot {
     }
 
     /**
-     * Crea una leyenda para el gráfico
-     * @param values Valores para la leyenda
-     * @param colorScale Escala de colores
+     * Creates a legend for the plot
+     * @param values Values for the legend
+     * @param colorScale Color scale
      */
     protected createLegend(
         values: string[], 

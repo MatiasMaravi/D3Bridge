@@ -5,21 +5,38 @@ const MARGIN = { top: 20, right: 20, bottom: 40, left: 30 };
 const DEFAULT_WIDTH = 800;
 const DEFAULT_HEIGHT = 600;
 
-// Interfaces para tipar la configuración dinámica
+// Supported D3.js standard projections
+export type D3ProjectionType = 
+    | "azimuthalEqualArea"
+    | "azimuthalEquidistant"
+    | "gnomonic"
+    | "orthographic"
+    | "stereographic"
+    | "equalEarth"
+    | "albers"
+    | "albersUsa"
+    | "conicConformal"
+    | "conicEqualArea"
+    | "conicEquidistant"
+    | "equirectangular"
+    | "mercator"
+    | "transverseMercator"
+    | "naturalEarth1";
+
+// Interfaces to type the dynamic configuration
 export interface MapConfig {
-    projectionType?: "mercator" | "albersUsa" | "orthographic";
-    fillColor?: string | ((d: any) => string); // Puede ser estático o una función accessor
+    projectionType?: D3ProjectionType;
+    fillColor?: string | ((d: any) => string); // Can be static or an accessor function
     strokeColor?: string;
     strokeWidth?: number;
     hoverFillColor?: string;
-    labelProperty?: string; // Ej: "name", "ESTADO", "departamento"
+    labelProperty?: string; // E.g., "name", "STATE", "department"
 }
 
 export interface GeoMapModel {
     geojson: GeoJSON.FeatureCollection;
     config: MapConfig;
-    selected_region?: string; // Para almacenar la región seleccionada en eventos de click
-    // data: any[]; -> Aquí podrías agregar un dataset extra para colorear el mapa (Coropletas)
+    selected_region?: string; // To store the selected region on click events
 }
 
 class GeoMapPlot {
@@ -33,11 +50,11 @@ class GeoMapPlot {
         this.el = el;
         this.model = model;
 
-        // Dimensiones iniciales (se actualizarán con el ResizeObserver)
+        // Initial dimensions (will be updated by the ResizeObserver)
         this.width = this.el.clientWidth || DEFAULT_WIDTH;
         this.height = DEFAULT_HEIGHT;
 
-        // Configurar ResizeObserver para ajustar el ancho automáticamente
+        // Configure ResizeObserver to automatically adjust the width
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 const newWidth = entry.contentRect.width;
@@ -53,7 +70,7 @@ class GeoMapPlot {
     public render(): void {
         d3.select(this.el).selectAll("*").remove();
 
-        // Asegurar que el contenedor tenga position relative para el tooltip
+        // Ensure the container has relative positioning for the tooltip
         d3.select(this.el).style("position", "relative");
 
         const geojson = this.model.get("geojson");
@@ -70,14 +87,35 @@ class GeoMapPlot {
 
         const g = svg.append("g")
             .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
-        let projectionBase = d3.geoMercator();
-        if (config.projectionType === "albersUsa") projectionBase = d3.geoAlbersUsa();
-        if (config.projectionType === "orthographic") projectionBase = d3.geoOrthographic();
-        // fitSize calcula automáticamente el scale y translate ideal para el GeoJSON dado
+        
+        // 1. Configure the requested D3 projection
+        let projectionBase: d3.GeoProjection;
+        switch (config.projectionType) {
+            case "albersUsa": projectionBase = d3.geoAlbersUsa(); break;
+            case "azimuthalEqualArea": projectionBase = d3.geoAzimuthalEqualArea(); break;
+            case "azimuthalEquidistant": projectionBase = d3.geoAzimuthalEquidistant(); break;
+            case "gnomonic": projectionBase = d3.geoGnomonic(); break;
+            case "orthographic": projectionBase = d3.geoOrthographic(); break;
+            case "stereographic": projectionBase = d3.geoStereographic(); break;
+            case "equalEarth": projectionBase = d3.geoEqualEarth(); break;
+            case "albers": projectionBase = d3.geoAlbers(); break;
+            case "conicConformal": projectionBase = d3.geoConicConformal(); break;
+            case "conicEqualArea": projectionBase = d3.geoConicEqualArea(); break;
+            case "conicEquidistant": projectionBase = d3.geoConicEquidistant(); break;
+            case "equirectangular": projectionBase = d3.geoEquirectangular(); break;
+            case "transverseMercator": projectionBase = d3.geoTransverseMercator(); break;
+            case "naturalEarth1": projectionBase = d3.geoNaturalEarth1(); break;
+            case "mercator":
+            default:
+                projectionBase = d3.geoMercator(); 
+                break;
+        }
+
+        // 2. fitSize automatically calculates the ideal scale and translate for the given GeoJSON
         const projection = projectionBase.fitSize([innerWidth, innerHeight], geojson);
         const pathGenerator = d3.geoPath().projection(projection);
 
-        // 3. Zoom generalizado
+        // 3. Generalized zoom
         const zoom = d3.zoom<SVGSVGElement, unknown>()
             .scaleExtent([1, 8])
             .on("zoom", (event) => {
@@ -86,8 +124,8 @@ class GeoMapPlot {
         
         svg.call(zoom);
 
-        // 4. Dibujar los polígonos usando la configuración dinámica
-        // Crear tooltip
+        // 4. Draw polygons using the dynamic configuration
+        // Create tooltip
         const tooltip = d3.select(this.el)
             .append("div")
             .attr("class", "map-tooltip")
@@ -99,15 +137,15 @@ class GeoMapPlot {
             .data(geojson.features)
             .enter()
             .append("path")
-            .attr("class", "region map-region") // Agregamos .map-region explicitamente
+            .attr("class", "region map-region") // Explicitly add .map-region
             .attr("d", pathGenerator as any)
             .attr("fill", (d: any) => {
-                // Si está seleccionado, el CSS se encarga del color
+                // If selected, CSS handles the color
                 const label = config.labelProperty && d.properties 
                     ? d.properties[config.labelProperty!] 
                     : "";
                 if (currentSelected && label === currentSelected) {
-                    return "#ffcc00"; // Color de selección
+                    return "#ffcc00"; // Selection color
                 }
                 return typeof config.fillColor === "function" 
                     ? config.fillColor(d) 
@@ -117,7 +155,7 @@ class GeoMapPlot {
             .attr("stroke-width", config.strokeWidth || 1)
             .style("cursor", "pointer")
             .classed("selected", (d: any) => {
-                // Solo marcar como seleccionado si hay una región seleccionada válida
+                // Only mark as selected if there is a valid selected region
                 if (!currentSelected) return false;
                 const label = config.labelProperty && d.properties 
                     ? d.properties[config.labelProperty!] 
@@ -125,23 +163,23 @@ class GeoMapPlot {
                 return label !== "" && label === currentSelected;
             });
 
-        // 5. Interacción: hover y tooltip
+        // 5. Interaction: hover and tooltip
         const self = this;
         paths.on("mouseover", function(_event, d: any) {
-            // Obtener el label para el tooltip
+            // Get the label for the tooltip
             let label = "";
             if (config.labelProperty && d.properties) {
                 label = d.properties[config.labelProperty] || "";
             }
             
-            // Mostrar tooltip si hay label
+            // Show tooltip if label exists
             if (label) {
                 tooltip
                     .style("opacity", 1)
                     .html(label);
             }
 
-            // Hover fill (solo si no está seleccionado)
+            // Hover fill (only if not selected)
             if (config.hoverFillColor && !d3.select(this).classed("selected")) {
                 d3.select(this).attr("fill", config.hoverFillColor);
             }
@@ -153,10 +191,10 @@ class GeoMapPlot {
                 .style("top", (y + 10) + "px");
         })
         .on("mouseout", function(_event, d: any) {
-            // Ocultar tooltip
+            // Hide tooltip
             tooltip.style("opacity", 0);
 
-            // Restaurar el color original solo si no está seleccionado
+            // Restore the original color only if not selected
             if (!d3.select(this).classed("selected")) {
                 const originalFill = typeof config.fillColor === "function" 
                     ? config.fillColor(d) 
@@ -165,47 +203,45 @@ class GeoMapPlot {
             }
         });
 
-        // 6. Manejo del evento click
+        // 6. Click event handling
         paths.on("click", function(_event, d: any) {
-            // Obtener el label de la región clickeada
+            // Get the label of the clicked region
             let label = "";
             if (config.labelProperty && d.properties) {
                 label = d.properties[config.labelProperty] || "";
             }
             
-            // Si no hay labelProperty configurado, no podemos identificar la región
+            // If no labelProperty is configured, we cannot identify the region
             if (!label) {
                 console.warn("GeoMapPlot: No labelProperty configured or property not found");
                 return;
             }
 
-            // Limpiar selección previa visual
+            // Clear previous visual selection
             paths.classed("selected", false);
             
-            // Restaurar colores de todos los elementos
+            // Restore colors of all elements
             paths.attr("fill", (d_item: any) => typeof config.fillColor === "function" 
                 ? config.fillColor(d_item) 
                 : (config.fillColor || "#cce5df"));
 
-            // Marcar nuevo seleccionado
+            // Mark new selection
             d3.select(this).classed("selected", true);
-            d3.select(this).attr("fill", "#ffcc00"); // Color de selección
+            d3.select(this).attr("fill", "#ffcc00"); // Selection color
             
-            // Actualizar modelo y sincronizar con Python
+            // Update model and synchronize with Python
             self.model.set("selected_region", label);
             self.model.save_changes();
             
         });
-
     }
-
 }
 
 function render({ el, model }: RenderProps<GeoMapModel>): (() => void) | void {
     let mapPlot = new GeoMapPlot(el, model);
     mapPlot.render();
 
-    // Escuchar cambios tanto en los datos geográficos como en la configuración
+    // Listen for changes in both geographic data and configuration
     model.on("change:geojson", () => {
         mapPlot.render();
     });

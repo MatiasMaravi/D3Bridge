@@ -3,7 +3,6 @@ import * as d3 from "d3";
 import { BasePlot, MARGIN, DEFAULT_HEIGHT } from "./base_plot";
 import "./linearplot.css";
 
-// Interfaz para el modelo de LinearPlot
 interface LinearPlotModel {
     x_: string;
     y_: string;
@@ -24,7 +23,7 @@ function dynamicSort(property: string) {
         return result * sortOrder;
     };
 }
-// Funciones auxiliares para agrupar datos
+// Auxiliary function to calculate means for the line plot (with optional grouping by hue)
 function getDataMeans(data: any[], x_value: string, y_value: string, hue: string): any[] {
     function getMeans(array: any[]) {
         const reduced = array.reduce((acc, item) => {
@@ -76,14 +75,13 @@ function groupArrayBy(array: any[], item: string) {
   }, {});
 }
 class LinearPlot extends BasePlot {
-    private readonly x_: string; // x-axis column name
-    private readonly y_: string; // y-axis column name
-    private readonly hue_: string; // hue column name (opcional, para agrupar)
-    private readonly palette_: string[]; // paleta de colores
-    private readonly data: any[]; // Array de objetos de datos
-    private readonly processedData: any[]; // Datos procesados con medias
+    private x_: string; // x-axis column name
+    private y_: string; // y-axis column name
+    private hue_: string; // hue column name (optional)
+    private palette_: string[];
+    private data: any[];
+    private processedData: any[];
 
-    // Referencias a elementos D3
     private xScale: d3.ScaleLinear<number, number> | null = null;
     private yScale: d3.ScaleLinear<number, number> | null = null;
     private xAxisGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
@@ -101,18 +99,15 @@ class LinearPlot extends BasePlot {
             this.palette_ = d3.schemeCategory10 as string[];
         }
 
-        // Actualizar altura si se proporciona
         this.height = model.get("height") || DEFAULT_HEIGHT;
         this.innerHeight = this.height - MARGIN.top - MARGIN.bottom;
 
-        // Procesar datos
         this.processedData = getDataMeans(this.data, this.x_, this.y_, this.hue_);
         this.processedData.forEach((d, i) => d.id = i);
     }
 
-    // Crear tooltip
+    // Create tooltip
     private createTooltip(): void {
-        // Asegurar que el contenedor tenga position relative para el tooltip
         d3.select(this.el).style("position", "relative");
         
         this.tooltip = d3.select(this.el)
@@ -121,7 +116,7 @@ class LinearPlot extends BasePlot {
             .style("opacity", 0);
     }
 
-    // Obtener escala de colores
+    // Get color scale based on hue values
     private getColorScale(): d3.ScaleOrdinal<string, string> {
         const domain = this.hue_ ? [...new Set(this.processedData.map(d => String(d[this.hue_])))] : ["default"];
         return d3.scaleOrdinal<string>()
@@ -129,7 +124,7 @@ class LinearPlot extends BasePlot {
             .range(this.palette_ as string[]);
     }
 
-    // Crear líneas del gráfico
+    // Create lines of the plot
     private createLines(colorScale: d3.ScaleOrdinal<string, string>): void {
         if (!this.g || !this.xScale || !this.yScale) return;
 
@@ -159,7 +154,7 @@ class LinearPlot extends BasePlot {
         }
     }
 
-    // Crear puntos del gráfico
+    // Create dots for the plot
     private createDots(colorScale: d3.ScaleOrdinal<string, string>): void {
         if (!this.g || !this.xScale || !this.yScale) return;
 
@@ -178,7 +173,7 @@ class LinearPlot extends BasePlot {
             .on("click", (event, d) => this.handleClick(event, d));
     }
 
-    // Manejadores de eventos
+    // Event handlers
     private handleMouseOver(event: MouseEvent, d: any): void {
         d3.select(event.currentTarget as Element)
             .style("opacity", 1)
@@ -222,7 +217,7 @@ class LinearPlot extends BasePlot {
         }
     }
 
-    // Configurar zoom
+    // Setup zoom behavior
     private setupZoom(): void {
         if (!this.svg || !this.xScale || !this.yScale) return;
 
@@ -241,13 +236,11 @@ class LinearPlot extends BasePlot {
         const newX = event.transform.rescaleX(this.xScale);
         const newY = event.transform.rescaleY(this.yScale);
 
-        // Actualizar ejes
         if (this.xAxisGroup && this.yAxisGroup) {
             this.xAxisGroup.call(d3.axisBottom(newX) as any);
             this.yAxisGroup.call(d3.axisLeft(newY) as any);
         }
 
-        // Actualizar líneas
         const lineGenerator = d3.line<any>()
             .x(d => newX(d[this.x_]))
             .y(d => newY(d[this.y_]));
@@ -255,21 +248,30 @@ class LinearPlot extends BasePlot {
         this.g.selectAll(".line-path")
             .attr("d", lineGenerator as any);
 
-        // Actualizar puntos
         this.g.selectAll(".line-dot")
             .attr("cx", (d: any) => newX(d[this.x_]))
             .attr("cy", (d: any) => newY(d[this.y_]));
     }
 
-    // Crear el gráfico completo
+    // Calculate the extent of the data for the given axis
     public createLinearPlot(): void {
-        // Crear SVG usando método heredado
+        this.data = this.model.get("data") || [];
+        this.x_ = this.model.get("x");
+        this.y_ = this.model.get("y");
+        this.hue_ = this.model.get("hue") || "";
+        this.palette_ = this.model.get("palette") || [];
+        
+        if (!this.palette_ || this.palette_.length === 0) {
+            this.palette_ = d3.schemeCategory10 as string[];
+        }
+        
+        this.processedData = getDataMeans(this.data, this.x_, this.y_, this.hue_);
+        this.processedData.forEach((d, i) => d.id = i);
+
         this.createSvg("linearplot-svg");
 
-        // Crear tooltip
         this.createTooltip();
 
-        // Crear escalas
         const xExtent = d3.extent(this.processedData, d => d[this.x_]) as [number, number];
         const yExtent = d3.extent(this.processedData, d => d[this.y_]) as [number, number];
 
@@ -283,10 +285,8 @@ class LinearPlot extends BasePlot {
             .nice()
             .range([this.innerHeight, 0]);
 
-        // Escala de colores
         const colorScale = this.getColorScale();
 
-        // Guardar referencia a los grupos de ejes para el zoom
         this.xAxisGroup = this.g!.append("g")
             .attr("class", "x-axis")
             .attr("transform", `translate(0,${this.innerHeight})`)
@@ -296,7 +296,6 @@ class LinearPlot extends BasePlot {
             .attr("class", "y-axis")
             .call(d3.axisLeft(this.yScale));
 
-        // Etiquetas
         this.g!.append("text")
             .attr("class", "x-label")
             .attr("x", this.innerWidth / 2)
@@ -307,19 +306,16 @@ class LinearPlot extends BasePlot {
         this.g!.append("text")
             .attr("class", "y-label")
             .attr("transform", "rotate(-90)")
-            .attr("y", -MARGIN.left + 15)
+            .attr("y", -MARGIN.left + 10)
             .attr("x", -this.innerHeight / 2)
             .attr("text-anchor", "middle")
             .text(this.y_);
 
-        // Crear líneas y puntos
         this.createLines(colorScale);
         this.createDots(colorScale);
 
-        // Crear leyenda
         this.createLegend(colorScale.domain(), colorScale);
 
-        // Configurar zoom
         this.setupZoom();
     }
 
