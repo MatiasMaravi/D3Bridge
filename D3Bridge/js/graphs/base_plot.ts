@@ -79,9 +79,12 @@ class BasePlot {
         
         this.svg = d3.select(this.el)
             .append("svg")
+            .attr("class", cssClass)
             .attr("width", "100%")
-            .attr("height", this.height)
-            .attr("class", cssClass);
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${this.width} ${this.height}`)
+            .attr("preserveAspectRatio", "xMidYMid meet");
+            
 
         this.g = this.svg.append("g")
             .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);

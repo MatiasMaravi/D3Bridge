@@ -352,7 +352,7 @@ class RangeInput(ObservableInputWidget):
         super().__init__(**kwargs)
         if value is not None:
             self.value = value
-#Esta clase no depende de "ObservableInputWidget",
+
 # Esto es así porque "Swatches" no es un input genérico en Observable Inputs,
 class SwatchesInput(anywidget.AnyWidget):
     """
