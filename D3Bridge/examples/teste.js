@@ -40,10 +40,10 @@ function render({ model, el }) {
 					const data = model.get("data");
 					const x_ = model.get("x_");
 					const y_ = model.get("y_");
-					const palette = model.get("palette");
+					const pallete = model.get("pallete");
 
 
-        plot(data, x_, y_, palette);
+        plot(data, x_, y_, pallete);
     }
 
     function initializeWidget() {
@@ -59,16 +59,16 @@ function render({ model, el }) {
 					model.on("change:data", replot);
 					model.on("change:x_", replot);
 					model.on("change:y_", replot);
-					model.on("change:palette", replot);
+					model.on("change:pallete", replot);
 
 
         // Renderizar inicialmente
 					const data = model.get("data");
 					const x_ = model.get("x_");
 					const y_ = model.get("y_");
-					const palette = model.get("palette");
+					const pallete = model.get("pallete");
 
-        plot(data, x_, y_, palette);
+        plot(data, x_, y_, pallete);
     }
 
     // Usar ResizeObserver solo para detectar cambios de ANCHO
@@ -150,7 +150,7 @@ function render({ model, el }) {
       .call(d3.axisLeft(y).tickFormat((y) => (y * 100).toFixed()))
       .call(g => g.select(".domain").remove())
       .call(g => g.append("text")
-          .attr("x", -marginLeft)
+          .attr("x", -marginLeft + 10)
           .attr("y", 10)
           .attr("fill", "currentColor")
           .attr("text-anchor", "start")
