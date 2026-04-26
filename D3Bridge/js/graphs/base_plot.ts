@@ -140,7 +140,7 @@ class BasePlot {
             this.g.append("text")
                 .attr("class", "y-label")
                 .attr("transform", "rotate(-90)")
-                .attr("y", -MARGIN.left + 15)
+                .attr("y", -MARGIN.left + 10)
                 .attr("x", -this.innerHeight / 2)
                 .attr("text-anchor", "middle")
                 .text(label);

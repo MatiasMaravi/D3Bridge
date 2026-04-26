@@ -26,7 +26,6 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
     
     console.log(model.get("grid_template_areas"));
 
-    // Función para manejar el estilo (tema)
     const updateStyle = () => {
         const style = model.get("style") || "basic";
         node.className = style; 
@@ -34,28 +33,27 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
 
 
     async function updateLayout() {
-        // Limpiar el contenedor antes de renderizar para evitar duplicados
         node.innerHTML = "";
 
         const children = model.get("children") || [];
         const widgetAreas = model.get("widget_areas") || {};
         
-        // Crear array de promesas para renderizar en paralelo
+        // Create an array of promises to render in parallel
         const promises = children.map(async (child: any) => {
             const modelId = child.slice("IPY_MODEL_".length);
             const areaName = widgetAreas[modelId];
 
-            // Nuevo widget
+            // New widget container for this child
             const grid_area = document.createElement("div");
             grid_area.setAttribute("id", modelId);
             grid_area.style.gridArea = areaName || "none";
             grid_area.classList.add("vp-dashboard-div");
 
-            // Agregar al DOM antes de crear la vista para que tenga dimensiones reales
+            // Append to DOM before creating view so it has real dimensions
             node.appendChild(grid_area);
 
             try {
-                // Usar el widget manager del modelo anywidget (Asíncrono)
+                // Use the anywidget model's widget manager (Asynchronous)
                 const childModel = await model.widget_manager.get_model(modelId);
                 console.log("Creating view for", modelId, childModel);
                 if (childModel) {
@@ -67,7 +65,7 @@ async function render({ model, el }: RenderProps<MatrixLayoutModel>) {
             }
         });
 
-        // Esperar a que todas las vistas se carguen
+        // Wait for all views to load
         await Promise.all(promises);
     }
     

@@ -2,9 +2,9 @@ import type { RenderProps } from "@anywidget/types";
 import "./layouts.css";
 
 interface MatrixCreatorModel {
-    rows: string; // Número de filas (como string para facilitar la entrada en Python)
-    columns: string; // Número de columnas (como string para facilitar la entrada en Python)
-    matrix: number[][]; // Matriz actual con números de grupo (0 para sin grupo, 1-9 para grupos)
+    rows: string;
+    columns: string;
+    matrix: number[][];
 }
 
 class MatrixCreator {
@@ -78,7 +78,7 @@ class MatrixCreator {
         groupInfo.className = "vp-group-info";
 
         const groupLabel = document.createElement("span");
-        groupLabel.textContent = "Grupo Actual:";
+        groupLabel.textContent = "Current group:";
         groupLabel.className = "vp-group-label";
 
         const currentGroupDisplay = document.createElement("span");
@@ -93,17 +93,17 @@ class MatrixCreator {
         const buttonsContainer = document.createElement("div");
         buttonsContainer.className = "vp-buttons-container";
 
-        const nextGroupBtn = this.createButton("➡️ Siguiente Contenedor", () => {
+        const nextGroupBtn = this.createButton("➡️ Next Container", () => {
             this.nextGroup();
             this.updateGroupDisplay(currentGroupDisplay);
         });
 
-        const resetGroupsBtn = this.createButton("🔄 Resetear Contenedores", () => {
+        const resetGroupsBtn = this.createButton("🔄 Reset Containers", () => {
             this.resetGroups(containerElement);
             this.updateGroupDisplay(currentGroupDisplay);
         });
 
-        const getMatrixBtn = this.createButton("📊 Guardar ", () => {
+        const getMatrixBtn = this.createButton("📊 Save Matrix", () => {
             this.showMatrix(containerElement);
         });
 
@@ -134,7 +134,7 @@ class MatrixCreator {
         cell.style.background = 'rgba(102, 126, 234, 0.3)';
     }
 
-    private handleMouseEnter(e: MouseEvent, cell: HTMLElement): void {
+    private handleMouseEnter(_e: MouseEvent, cell: HTMLElement): void {
         if (!this.isDragging || !this.startCell) return;
         this.clearTemporarySelection();
 
@@ -163,7 +163,7 @@ class MatrixCreator {
         }
     }
 
-    private handleMouseUp(e: MouseEvent, cell: HTMLElement): void {
+    private handleMouseUp(_e: MouseEvent, cell: HTMLElement): void {
         if (!this.isDragging || !this.startCell) return;
 
         const startRow = parseInt(this.startCell.dataset.row!);
@@ -259,7 +259,7 @@ class MatrixCreator {
         }
 
         if (!this.validateGroupsAreRectangular(matrix)) {
-            this.showErrorMessage('Los grupos deben ser cuadrados o rectangulares. Por favor, corrige los grupos.');
+            this.showErrorMessage('The groups must be squares or rectangles. Please correct the groups.');
             return;
         }
 
@@ -322,7 +322,7 @@ class MatrixCreator {
         checkIcon.className = 'vp-check-icon';
         
         const messageText = document.createElement('span');
-        messageText.textContent = 'Layout guardado exitosamente';
+        messageText.textContent = 'Layout saved successfully';
 
         message.appendChild(checkIcon);
         message.appendChild(messageText);
@@ -384,7 +384,7 @@ class MatrixCreator {
     }
 
     private isGroupMatrix(matrix: number[][]): boolean {
-        // Detecta si la matriz parece contener grupos (o 1-9) en lugar de un contador secuencial grande.
+        // Detects if the matrix seems to contain groups (1-9) instead of a large sequential counter
         let max = 0;
         for(const row of matrix) {
             for(const val of row) {
@@ -428,7 +428,7 @@ class MatrixCreator {
         leftContainer.className = "vp-matrix-container";
 
         const matrixGrid = this.createMatrixGrid(matrix);
-        // Intentar restaurar estado visual si parece una matriz de grupos guardada
+        // Try to restore visual state if it looks like a saved group matrix
         if (matrix && this.isGroupMatrix(matrix)) {
             this.restoreVisualGroups(matrix, matrixGrid);
         }
