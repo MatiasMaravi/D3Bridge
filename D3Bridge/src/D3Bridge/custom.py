@@ -3,31 +3,31 @@ import urllib3
 from traitlets import Unicode
 
 class CustomWidget(anywidget.AnyWidget):
-    """Widget para crear vistas personalizadas desde archivos locales o URLs.
+    """Widget to create custom views from local files or URLs.
 
-    Esta clase facilita la construcción de widgets en el frontend a partir de
-    archivos JavaScript externos que definen una función `plot(...)`. Permite
-    pasar parámetros desde el modelo (traitlets) y gestionar importaciones
-    adicionales como d3 y otras librerías.
+    This class facilitates the construction of frontend widgets from
+    external JavaScript files that define a `plot(...)` function. It allows
+    passing parameters from the model (traitlets) and managing additional
+    imports like d3 and other libraries.
 
     Attributes:
-        elementId (Unicode): Identificador opcional del elemento DOM donde se
-            renderizará el widget. Si no se define, se usa el contenedor `el`.
+        elementId (Unicode): Optional identifier of the DOM element where
+            the widget will be rendered. If not defined, the container `el` is used.
     """
     elementId = Unicode().tag(sync=True)
 
     @staticmethod
     def readFromWeb(url: str) -> str:
-        """Lee contenido de una URL y lo devuelve como texto.
+        """Reads content from a URL and returns it as a string.
 
         Args:
-            url (str): URL del recurso a leer (ej. un archivo JS).
+            url (str): URL of the resource to read (e.g. a JS file).
 
         Returns:
-            str: Contenido del recurso en texto UTF-8.
+            str: Content of the resource as UTF-8 text.
 
         Raises:
-            urllib3.exceptions.HTTPError: Si ocurre un error de red al solicitar el recurso.
+            urllib3.exceptions.HTTPError: If a network error occurs when requesting the resource.
         """
         http = urllib3.PoolManager(cert_reqs="CERT_NONE")
         response = http.request("GET", url)
@@ -36,16 +36,16 @@ class CustomWidget(anywidget.AnyWidget):
 
     @staticmethod
     def readFromLocalFile(path: str) -> str:
-        """Lee un archivo local y devuelve su contenido como texto.
+        """Reads a local file and returns its content as a string.
 
         Args:
-            path (str): Ruta local del archivo a leer.
+            path (str): Local path of the file to read.
 
         Returns:
-            str: Contenido del archivo concatenado en texto.
+            str: Concatenated content of the file as text.
 
         Raises:
-            OSError: Si el archivo no existe o no puede leerse.
+            OSError: If the file does not exist or cannot be read.
         """
         text = ""
         with open(path, "r", encoding="utf-8") as file:
@@ -59,20 +59,20 @@ class CustomWidget(anywidget.AnyWidget):
                                   height:int=400, 
                                   d3_version: str = "7", 
                                   extra_imports: list = None):
-        """Crea el widget a partir de un archivo JS local.
+        """Creates the widget from a local JS file.
 
-        El archivo debe definir una función `plot(...)` que será invocada con
-        los parámetros listados en `paramList`.
+        The file must define a `plot(...)` function that will be invoked with
+        the parameters listed in `paramList`.
 
         Args:
-            paramList (list): Nombres de variables (traitlets) que el JS leerá del modelo.
-            filePath (str): Ruta local del archivo JS con la función `plot(...)`.
-            height (int, optional): Alto del contenedor en px si no se puede medir el DOM. Por defecto 400.
-            d3_version (str, optional): Versión de d3 a importar (ej. "7", "7.9.0", "v7"). Por defecto "7".
-            extra_imports (list, optional): Lista de sentencias `import` adicionales para el JS.
+            paramList (list): Variable names (traitlets) that the JS will read from the model.
+            filePath (str): Local path of the JS file with the `plot(...)` function.
+            height (int, optional): Container height in px if the DOM cannot be measured. Defaults to 400.
+            d3_version (str, optional): Version of d3 to import (e.g. "7", "7.9.0", "v7"). Defaults to "7".
+            extra_imports (list, optional): List of additional `import` statements for the JS.
 
         Returns:
-            str: Código fuente del módulo JS que será usado por el frontend.
+            str: Source code of the JS module that will be used by the frontend.
         """
         if extra_imports is None:
             extra_imports = []
@@ -91,17 +91,17 @@ class CustomWidget(anywidget.AnyWidget):
                             height:int=400, 
                             d3_version: str = "7", 
                             extra_imports: list = None):
-        """Crea el widget a partir de un archivo JS disponible en una URL.
+        """Creates the widget from a JS file available at a URL.
 
         Args:
-            paramList (list): Nombres de variables (traitlets) que el JS leerá del modelo.
-            jsUrl (str): URL del archivo JS con la función `plot(...)`.
-            height (int, optional): Alto del contenedor en px si no se puede medir el DOM. Por defecto 400.
-            d3_version (str, optional): Versión de d3 a importar. Por defecto "7".
-            extra_imports (list, optional): Lista de sentencias `import` adicionales para el JS.
+            paramList (list): Variable names (traitlets) that the JS will read from the model.
+            jsUrl (str): URL of the JS file with the `plot(...)` function.
+            height (int, optional): Container height in px if the DOM cannot be measured. Defaults to 400.
+            d3_version (str, optional): Version of d3 to import. Defaults to "7".
+            extra_imports (list, optional): List of additional `import` statements for the JS.
 
         Returns:
-            str: Código fuente del módulo JS que será usado por el frontend.
+            str: Source code of the JS module that will be used by the frontend.
         """
         if extra_imports is None:
             extra_imports = []
@@ -114,27 +114,27 @@ class CustomWidget(anywidget.AnyWidget):
 
     @staticmethod
     def _createWidget(paramList: list, string: str, fileReader, height:int=400, d3_version: str = "7", extra_imports: list = None):
-        """Construye el módulo JS del widget a partir de un origen y un lector.
+        """Builds the widget's JS module from a source and a reader.
 
-        Este método compone un módulo ES que:
-        - Importa d3 y librerías adicionales.
-        - Obtiene valores del modelo (traitlets) y los pasa a `plot(...)`.
-        - Gestiona re-renderizado al cambiar los parámetros.
-        - Espera a que el elemento DOM tenga tamaño antes de renderizar.
+        This method composes an ES module that:
+        - Imports d3 and additional libraries.
+        - Gets values from the model (traitlets) and passes them to `plot(...)`.
+        - Manages re-rendering when parameters change.
+        - Waits for the DOM element to have a size before rendering.
 
         Args:
-            paramList (list): Nombres de variables (traitlets) que se inyectarán a `plot(...)`.
-            string (str): Ruta local o URL del archivo JS que contiene `plot(...)`.
-            fileReader (Callable[[str], str]): Función para leer contenido desde `string`.
-            height (int, optional): Alto por defecto si no se puede medir el contenedor. Por defecto 400.
-            d3_version (str, optional): Versión de d3 a importar. Por defecto "7".
-            extra_imports (list, optional): Sentencias `import` adicionales (líneas completas).
+            paramList (list): Variable names (traitlets) that will be injected into `plot(...)`.
+            string (str): Local path or URL of the JS file containing `plot(...)`.
+            fileReader (Callable[[str], str]): Function to read content from `string`.
+            height (int, optional): Default height if the container cannot be measured. Defaults to 400.
+            d3_version (str, optional): Version of d3 to import. Defaults to "7".
+            extra_imports (list, optional): Additional `import` statements (full lines).
 
         Returns:
-            str: Código fuente del módulo JS generado.
+            str: Source code of the generated JS module.
 
         Side Effects:
-            Escribe el módulo generado en el archivo local "teste.js" para depuración.
+            Writes the generated module to the local file "teste.js" for debugging.
         """
         if extra_imports is None:
             extra_imports = []
@@ -142,7 +142,7 @@ class CustomWidget(anywidget.AnyWidget):
         d3_import = f'import * as d3 from "https://esm.sh/d3@{d3_version}";'
         extra_imports_block = "\n".join(cleaned_imports)
         
-        # Generar código para obtener variables
+        # Generate code to get variables
         modelVars = ""
         modelChanges = ""
         paramsString = ", ".join(paramList)
@@ -154,7 +154,7 @@ class CustomWidget(anywidget.AnyWidget):
 
         fileStr = fileReader(string)
         
-        # Plantilla JS optimizada con ResizeObserver
+        # Optimized JS template with ResizeObserver
         jsStr = """
 {d3_import}
 {extra_imports_block}
@@ -168,7 +168,7 @@ function render({{ model, el }}) {{
     let lastWidth = 0;
     let resizeTimeout = null;
 
-    // Configurar estilos del contenedor con altura FIJA para celda Jupyter
+    // Configure container styles with FIXED height for Jupyter cell
     el.style.width = "100%";
     el.style.height = "{height}px";
     el.style.overflow = "hidden";
@@ -184,7 +184,7 @@ function render({{ model, el }}) {{
         if (!element) return false;
         
         width = element.clientWidth || element.offsetWidth;
-        // Altura fija, no dependemos del contenido
+        // Fixed height, we do not depend on content
         height = {height};
         
         return width > 0;
@@ -208,15 +208,15 @@ function render({{ model, el }}) {{
         initialized = true;
         lastWidth = width;
 
-        // Registrar cambios en el modelo
+        // Register model changes
 {modelChanges}
 
-        // Renderizar inicialmente
+        // Initial render
 {modelVars}
         plot({paramsString});
     }}
 
-    // Usar ResizeObserver solo para detectar cambios de ANCHO
+    // Use ResizeObserver only to detect WIDTH changes
     resizeObserver = new ResizeObserver((entries) => {{
         for (const entry of entries) {{
             const newWidth = entry.contentRect.width;
@@ -225,10 +225,10 @@ function render({{ model, el }}) {{
                 if (!initialized) {{
                     initializeWidget();
                 }} else if (Math.abs(newWidth - lastWidth) > 5) {{
-                    // Solo re-renderizar si el ancho cambió significativamente
+                    // Only re-render if width changed significantly
                     lastWidth = newWidth;
                     
-                    // Debounce para evitar múltiples renders
+                    // Debounce to avoid multiple renders
                     if (resizeTimeout) clearTimeout(resizeTimeout);
                     resizeTimeout = setTimeout(() => {{
                         replot();
@@ -238,10 +238,10 @@ function render({{ model, el }}) {{
         }}
     }});
 
-    // Observar el elemento contenedor
+    // Observe container element
     resizeObserver.observe(el);
 
-    // Fallback: intentar inicializar si el elemento ya tiene tamaño
+    // Fallback: try to initialize if element already has size
     requestAnimationFrame(() => {{
         if (!initialized && updateSizes()) {{
             initializeWidget();

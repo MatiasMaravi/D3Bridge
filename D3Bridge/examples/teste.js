@@ -38,9 +38,12 @@ function render({ model, el }) {
         element.innerHTML = "";
 
 					const data = model.get("data");
+					const x_ = model.get("x_");
+					const y_ = model.get("y_");
+					const pallete = model.get("pallete");
 
 
-        plot(data);
+        plot(data, x_, y_, pallete);
     }
 
     function initializeWidget() {
@@ -54,12 +57,18 @@ function render({ model, el }) {
 
         // Registrar cambios en el modelo
 					model.on("change:data", replot);
+					model.on("change:x_", replot);
+					model.on("change:y_", replot);
+					model.on("change:pallete", replot);
 
 
         // Renderizar inicialmente
 					const data = model.get("data");
+					const x_ = model.get("x_");
+					const y_ = model.get("y_");
+					const pallete = model.get("pallete");
 
-        plot(data);
+        plot(data, x_, y_, pallete);
     }
 
     // Usar ResizeObserver solo para detectar cambios de ANCHO
@@ -94,93 +103,58 @@ function render({ model, el }) {
         }
     });
 
-    function plot(sales){
+    function plot(data,x_,y_,pallete) {
 
   const marginTop = 30;
-  const marginRight = -1;
-  const marginBottom = -1;
-  const marginLeft = 1;
-
-  // Create the color scale.
-  const color = d3.scaleOrdinal(d3.schemeCategory10).domain(sales.map(d => d.segment));
+  const marginRight = 20;
+  const marginBottom = 30;
+  const marginLeft = 40;
 
   d3.select(element).selectAll("*").remove();
-  // Compute the layout.
-  const treemap = data => d3.treemap()
-      .round(true)
-      .tile(d3.treemapSliceDice)
-      .size([
-        width - marginLeft - marginRight, 
-        height - marginTop - marginBottom
-      ])
-    (d3.hierarchy(d3.group(data, d => d.market, d => d.segment)).sum(d => d.value))
-    .each(d => {
-      d.x0 += marginLeft;
-      d.x1 += marginLeft;
-      d.y0 += marginTop;
-      d.y1 += marginTop;
-    });
-  const root = treemap(sales);
 
-  // Create the SVG container.
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(data, ([d]) => -d[y_], (d) => d[x_]))
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(data, (d) => d[y_])])
+      .range([height - marginBottom, marginTop]);
+
+
   const svg = d3.select(element)
       .append("svg")
+      .attr("width", "100%")
+      .attr("height", "100%")
       .attr("viewBox", [0, 0, width, height])
-      .attr("width", width)
-      .attr("height", height)
-      .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
-
-  // Position the nodes.
-  const node = svg.selectAll("g")
-    .data(root.descendants())
-    .join("g")
-      .attr("transform", d => `translate(${d.x0},${d.y0})`);
-
-  const format = d => d.toLocaleString();
-
-  // Draw column labels.
-  const column = node.filter(d => d.depth === 1);
-
-  column.append("text")
-      .attr("x", 3)
-      .attr("y", "-1.7em")
-      .style("font-weight", "bold")
-      .text(d => d.data[0]);
-
-  column.append("text")
-      .attr("x", 3)
-      .attr("y", "-0.5em")
-      .attr("fill-opacity", 0.7)
-      .text(d => format(d.value));
-
-  column.append("line")
-      .attr("x1", -0.5)
-      .attr("x2", -0.5)
-      .attr("y1", -30)
-      .attr("y2", d => d.y1 - d.y0)
-      .attr("stroke", "#000")
-
-  // Draw leaves.
-  const cell = node.filter(d => d.depth === 2);
-
-  cell.append("rect")
-      .attr("fill", d => color(d.data[0]))
-      .attr("fill-opacity", (d, i) => d.value / d.parent.value)
-      .attr("width", d => d.x1 - d.x0 - 1)
-      .attr("height", d => d.y1 - d.y0 - 1);
-
-  cell.append("text")
-      .attr("x", 3)
-      .attr("y", "1.1em")
-      .text(d => d.data[0]);
-
-  cell.append("text")
-      .attr("x", 3)
-      .attr("y", "2.3em")
-      .attr("fill-opacity", 0.7)
-      .text(d => format(d.value));
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
 
+  svg.append("g")
+    .selectAll()
+    .data(data)
+    .join("rect")
+      .attr("x", (d) => x(d[x_]))
+      .attr("y", (d) => y(d[y_]))
+      .attr("height", (d) => y(0) - y(d[y_]))
+      .attr("width", x.bandwidth())
+      .attr("fill", (d, i) => pallete[i % pallete.length]);
+
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+
+
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y * 100).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ Frequency (%)"));
 }
 }
 
