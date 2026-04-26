@@ -4,12 +4,12 @@ from typing import List, Dict, Any, Optional, Iterator, Union
 
 class Dataframe:
     def __init__(self, data: pd.DataFrame = None, name: str = ""):
-        # Inicialización segura
+        # Safe initialization
         self._data = data if data is not None else pd.DataFrame()
         self._name = name
 
 
-    # --- Propiedades (Getters & Setters Seguros) ---
+    # --- Properties (Safe Getters & Setters) ---
     @property
     def data(self) -> List[Dict[str, Any]]:
         return self._data.to_dict(orient="records")
@@ -17,24 +17,24 @@ class Dataframe:
     @data.setter
     def data(self, value: pd.DataFrame):
         if not isinstance(value, pd.DataFrame):
-            raise ValueError("data debe ser un DataFrame de pandas")
+            raise ValueError("data must be a pandas DataFrame")
         self._data = value
-        # Actualizar columnas automáticamente al cambiar los datos
+        # Automatically update columns when data changes
         if not self._data.empty:
             self.columns = list(self._data.columns)
 
     @property
     def columns(self) -> List[str]:
-        # Lee siempre la verdad actual del dataframe
+        # Always reads the current truth of the dataframe
         return self._data.columns.tolist() if self._data is not None else []
     
     @columns.setter
     def columns(self, value: List[str]):
         if not isinstance(value, list):
-            raise ValueError("columns debe ser una lista de strings")
-        # Esto realmente renombra las columnas en el DataFrame
+            raise ValueError("columns must be a list of strings")
+        # This actually renames the columns in the DataFrame
         if len(value) != len(self._data.columns):
-             raise ValueError("La longitud de la lista no coincide con el número de columnas")
+             raise ValueError("List length does not match the number of columns")
         self._data.columns = value
 
     @property
@@ -44,36 +44,36 @@ class Dataframe:
     @name.setter
     def name(self, value: str):
         if not isinstance(value, str):
-            raise ValueError("name debe ser una cadena de texto")
+            raise ValueError("name must be a string")
         self._name = value
-    # --- Métodos para simular comportamiento de Lista (Observable Style) ---
-    # --- Método unificado para simular comportamiento de Lista ---
+    # --- Methods to simulate List behavior (Observable Style) ---
+    # --- Unified method to simulate List behavior ---
     def __getitem__(self, item: Union[int, str]):
         """
-        Maneja acceso dual:
-        - Si es int: Devuelve la fila (iloc)
-        - Si es str: Devuelve la columna como lista
+        Handles dual access:
+        - If int: Returns the row (iloc)
+        - If str: Returns the column as a list
         """
-        # Caso 1: Acceso por índice numérico (Fila)
+        # Case 1: Access by numeric index (Row)
         if isinstance(item, int):
             return self._data.iloc[item].to_dict()
         
-        # Caso 2: Acceso por nombre de columna (Lista de valores)
+        # Case 2: Access by column name (List of values)
         elif isinstance(item, str):
             if item not in self._data.columns:
-                raise KeyError(f"La columna '{item}' no existe en el Dataframe.")
+                raise KeyError(f"Column '{item}' does not exist in the Dataframe.")
             return self._data[item].tolist()
         
-        # Caso 3: Error para otros tipos
+        # Case 3: Error for other types
         else:
-            raise TypeError(f"El índice debe ser int (fila) o str (columna), no {type(item)}")
+            raise TypeError(f"Index must be int (row) or str (column), not {type(item)}")
 
     def __iter__(self) -> Iterator[Dict[str, Any]]:
-        """Permite iterar como: for row in df: ..."""
+        """Allows iterating like: for row in df: ..."""
         return iter(self._data.to_dict(orient="records"))
 
     def __len__(self) -> int:
-        """Permite usar len(df)"""
+        """Allows using len(df)"""
         return len(self._data)
 
     def head(self, n: int = 5) -> pd.DataFrame:
@@ -85,11 +85,11 @@ class Dataframe:
     def __repr__(self) -> str:
         return f"<Dataframe name='{self.name}' rows={len(self)} columns={self.columns}>"
     
-    #--- Otros métodos útiles ---
+    #--- Other useful methods ---
     # Min of a column
     def min(self, column: str) -> Any:
         if column not in self._data.columns:
-            raise ValueError(f"La columna '{column}' no existe en el Dataframe.")
+            raise ValueError(f"Column '{column}' does not exist in the Dataframe.")
         value = self._data[column].min()
         if pd.isna(value):
             return None
@@ -100,7 +100,7 @@ class Dataframe:
     # Max of a column
     def max(self, column: str) -> Any:
         if column not in self._data.columns:
-            raise ValueError(f"La columna '{column}' no existe en el Dataframe.")
+            raise ValueError(f"Column '{column}' does not exist in the Dataframe.")
         value = self._data[column].max()
         if pd.isna(value):
             return None
@@ -126,19 +126,19 @@ _GEO_DATASETS = {
 }
 _BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
 def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference
-    """Carga un dataset interno (archivo local o URL) por su nombre."""
+    """Loads an internal dataset (local file or URL) by name."""
     if name not in _DATASETS:
         options = ", ".join(_DATASETS.keys())
-        raise ValueError(f"Dataset '{name}' no encontrado. Disponibles: {options}")
+        raise ValueError(f"Dataset '{name}' not found. Available: {options}")
 
     source = _DATASETS[name]
     
-    # --- LÓGICA HÍBRIDA (URL vs LOCAL) ---
+    # --- HYBRID LOGIC (URL vs LOCAL) ---
     if source.startswith(("http://", "https://")):
-        # Si es URL, pasamos la cadena tal cual
+        # If it's a URL, pass the string as is
         file_path = source
     else:
-        # Si es local, construimos la ruta absoluta
+        # If it's local, construct the absolute path
         file_path = _BASE_PATH / source
     
     df = read_dataset(file_path)
@@ -146,75 +146,75 @@ def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference
     return df
 
 def get_geo_dataset(name: str) -> Dict[str, Any]:
-    """Carga un dataset geográfico interno (archivo local o URL) por su nombre."""
+    """Loads an internal geographic dataset (local file or URL) by name."""
     if name not in _GEO_DATASETS:
         options = ", ".join(_GEO_DATASETS.keys())
-        raise ValueError(f"Dataset geográfico '{name}' no encontrado. Disponibles: {options}")
+        raise ValueError(f"Geographic dataset '{name}' not found. Available: {options}")
     source = _GEO_DATASETS[name]
-        # --- LÓGICA HÍBRIDA (URL vs LOCAL) ---
+        # --- HYBRID LOGIC (URL vs LOCAL) ---
     if source.startswith(("http://", "https://")):
-        # Si es URL, pasamos la cadena tal cual
+        # If it's a URL, pass the string as is
         file_path = source
     else:
-        # Si es local, construimos la ruta absoluta
+        # If it's local, construct the absolute path
         file_path = _BASE_PATH / source
     geojson_data = read_geojson(file_path)
     return geojson_data
 
 def read_dataset(file_path: str | Path, sep: Optional[str] = None) -> 'Dataframe':
-    """Lee un archivo local O una URL y devuelve un objeto Dataframe."""
+    """Reads a local file OR a URL and returns a Dataframe object."""
     
-    # Convertimos a string para verificar si es URL
+    # Convert to string to check if it's a URL
     path_str = str(file_path)
     is_url = path_str.startswith(("http://", "https://"))
     
-    # Objeto Path para utilidades (extraer extensión o nombre), 
-    # aunque no exista en disco local.
-    # Nota: Path(url).stem funciona bien para extraer el nombre del archivo de la URL
+    # Path object for utilities (extract extension or name), 
+    # even if it doesn't exist on local disk.
+    # Note: Path(url).stem works well to extract the file name from the URL
     path_obj = Path(file_path) if not is_url else Path(path_str.split("?")[0]) 
 
-    # 1. Validación de existencia (SOLO SI ES LOCAL)
+    # 1. Existence validation (ONLY IF LOCAL)
     if not is_url and not path_obj.exists():
-        raise FileNotFoundError(f"El archivo no existe: {path_obj}")
+        raise FileNotFoundError(f"The file does not exist: {path_obj}")
 
-    # 2. Inferencia automática del separador
+    # 2. Automatic separator inference
     if sep is None:
-        # Funciona tanto para path local como para URL (ej: archivo.tsv)
+        # Works for both local path and URL (e.g., archivo.tsv)
         sep = "\t" if path_obj.suffix == ".tsv" else ","
 
     try:
-        # 3. Lectura con Pandas (Pandas maneja URLs nativamente)
-        # storage_options={'User-Agent': ...} a veces ayuda con bloqueos de github/gists, 
-        # pero para raw gists suele funcionar directo.
+        # 3. Reading with Pandas (Pandas handles URLs natively)
+        # storage_options={'User-Agent': ...} sometimes helps with github/gists blocks, 
+        # but it usually works directly for raw gists.
         pd_df = pd.read_csv(path_str, sep=sep)
         
         return Dataframe(data=pd_df, name=path_obj.stem)
         
     except Exception as e:
-        msg = "descargar la URL" if is_url else "leer el archivo"
-        raise RuntimeError(f"Error al {msg}: {e}")
+        msg = "download the URL" if is_url else "read the file"
+        raise RuntimeError(f"Error trying to {msg}: {e}")
 
 def read_geojson(file_path: str | Path) -> Dict[str, Any]:
-    """Lee un archivo GeoJSON local o una URL y devuelve su contenido como diccionario."""
-    # Convertimos a string para verificar si es URL
+    """Reads a local GeoJSON file or a URL and returns its content as a dictionary."""
+    # Convert to string to check if it's a URL
     path_str = str(file_path)
     is_url = path_str.startswith(("http://", "https://"))
     
-    # Objeto Path para utilidades (extraer extensión o nombre), 
-    # aunque no exista en disco local.
+    # Path object for utilities (extract extension or name), 
+    # even if it doesn't exist on local disk.
     path_obj = Path(file_path) if not is_url else Path(path_str.split("?")[0]) 
 
-    # Validación de existencia (SOLO SI ES LOCAL)
+    # Existence validation (ONLY IF LOCAL)
     if not is_url and not path_obj.exists():
-        raise FileNotFoundError(f"El archivo no existe: {path_obj}")
+        raise FileNotFoundError(f"The file does not exist: {path_obj}")
 
     try:
-        # Pandas no tiene un método directo para GeoJSON, así que usamos json estándar
+        # Pandas doesn't have a direct method for GeoJSON, so we use standard json
         import json
         if is_url:
             import requests
             response = requests.get(path_str)
-            response.raise_for_status()  # Verificar que la solicitud fue exitosa
+            response.raise_for_status()  # Verify that the request was successful
             geojson_data = response.json()
         else:
             with open(path_obj, 'r', encoding='utf-8') as f:
@@ -223,10 +223,10 @@ def read_geojson(file_path: str | Path) -> Dict[str, Any]:
         return geojson_data
             
     except Exception as e:
-        msg = "descargar la URL" if is_url else "leer el archivo"
-        raise RuntimeError(f"Error al {msg}: {e}")
+        msg = "download the URL" if is_url else "read the file"
+        raise RuntimeError(f"Error trying to {msg}: {e}")
 def list_available() -> List[str]:
-    """Devuelve una lista de los nombres de los datasets disponibles."""
+    """Returns a list of the names of the available datasets."""
     return list(_DATASETS.keys()) + list(_GEO_DATASETS.keys())
 
 def to_Dataframe(df: pd.DataFrame, name: str = "") -> 'Dataframe':
