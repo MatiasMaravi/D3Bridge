@@ -1,26 +1,19 @@
 import pandas as pd
 import numpy as np
+from typing import List, Dict, Any, Tuple
 
 class ShapProcessor:
     """
-    A utility class to process SHAP (SHapley Additive exPlanations) explanation objects 
-    into formats compatible with web-based visualization libraries.
+    Utility class to process SHAP explanation objects.
     """
 
     @staticmethod
-    def process_single(val):
+    def process_single(val: Any) -> Tuple[List[Dict[str, Any]], float]:
         """
-        Processes a single SHAP observation into a list of records and a base value.
-
-        Args:
-            val: A SHAP Explanation object containing a single observation 
-                 (e.g., shap_values[0]).
-
+        Processes a single SHAP observation.
+        
         Returns:
-            tuple: A tuple containing:
-                - list: A list of dictionaries (records), where each dict contains 
-                  'data', 'feature_names', and 'values' for the observation.
-                - float: The base value (expected value) for the prediction.
+            A tuple containing a list of records and the base value.
         """
         df = pd.DataFrame()
         df.insert(0, "values", val.values)
@@ -28,28 +21,18 @@ class ShapProcessor:
         df.insert(0, "data", val.data)
         
         base_val = val.base_values[0] if isinstance(val.base_values, (list, np.ndarray)) else val.base_values
-        return df.to_dict(orient="records"), base_val
+        # .to_dict(orient="records") devuelve List[Dict]
+        return df.to_dict(orient="records"), float(base_val)
 
     @staticmethod
-    def process_multi(val):
+    def process_multi(val: Any) -> Tuple[List[Dict[str, Any]], float]:
         """
-        Processes multiple SHAP observations by transposing matrices into 
-        feature-oriented records.
-
-        Args:
-            val: A SHAP Explanation object containing multiple observations.
-
-        Returns:
-            tuple: A tuple containing:
-                - list: A list of dictionaries, where each dict maps a feature name 
-                  to its corresponding array of values and data points across observations.
-                - float: The base value (expected value) for the model.
+        Processes multiple SHAP observations.
         """
-        # Transpose arrays to group by feature rather than by observation
         valuesArray = np.transpose(val.values).tolist()
         dataArray = np.transpose(val.data).tolist()
         
-        records = []
+        records: List[Dict[str, Any]] = []
         for i in range(len(val.feature_names)):
             records.append({
                 "feature_names": val.feature_names[i],
@@ -58,4 +41,4 @@ class ShapProcessor:
             })
             
         base_val = val.base_values[0] if isinstance(val.base_values, (list, np.ndarray)) else val.base_values
-        return records, base_val
+        return records, float(base_val)

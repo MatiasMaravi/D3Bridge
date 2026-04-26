@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import pathlib
 import traitlets
-
-from ._shap_processor import ShapProcessor, shap
+import shap
+from ._shap_processor import ShapProcessor
 
 class BarPlot(anywidget.AnyWidget):
     _esm = pathlib.Path(__file__).parent / "static" / "graphs" / "barplot.js"
