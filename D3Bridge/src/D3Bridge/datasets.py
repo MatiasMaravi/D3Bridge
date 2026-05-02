@@ -89,25 +89,24 @@ class Dataframe:
     # Min of a column
     def min(self, column: str) -> Any:
         if column not in self._data.columns:
-            raise ValueError(f"Column '{column}' does not exist in the Dataframe.")
+            raise ValueError(f"Column '{column}' not found. Available: {list(self._data.columns)}")
+        
         value = self._data[column].min()
-        if pd.isna(value):
-            return None
-        elif isinstance(value, (pd.Timestamp, pd.Timedelta)):
-            return value.isoformat()
-        else:
-            return value.item()
-    # Max of a column
+        return self._ensure_native(value)
+
     def max(self, column: str) -> Any:
         if column not in self._data.columns:
-            raise ValueError(f"Column '{column}' does not exist in the Dataframe.")
+            raise ValueError(f"Column '{column}' not found. Available: {list(self._data.columns)}")
+        
         value = self._data[column].max()
+        return self._ensure_native(value)
+
+    def _ensure_native(self, value: Any) -> Any:
         if pd.isna(value):
             return None
-        elif isinstance(value, (pd.Timestamp, pd.Timedelta)):
+        if isinstance(value, (pd.Timestamp, pd.Timedelta)):
             return value.isoformat()
-        else:
-            return value.item()
+        return value.item() if hasattr(value, "item") else value
     
     
 
@@ -124,7 +123,7 @@ _GEO_DATASETS = {
     "USA": "states-albers-10m.json",
     "sample": "sample.json"
 }
-_BASE_PATH = Path(__file__).resolve().parent.parent.parent / "datasets"
+_BASE_PATH = Path(__file__).resolve().parent / "datasets"
 def get_dataset(name: str) -> 'Dataframe': # Type hint string forward reference
     """Loads an internal dataset (local file or URL) by name."""
     if name not in _DATASETS:

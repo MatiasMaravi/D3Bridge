@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "D3Bridge"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = ["anywidget"]
 readme = "README.md"
 
@@ -22,7 +22,10 @@ dev = ["watchfiles", "jupyterlab"]
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["src/D3Bridge/static/*"]
+artifacts = [
+    "src/D3Bridge/static/*",
+    "src/D3Bridge/datasets/*"
+    ]
 
 [tool.hatch.build.hooks.jupyter-builder]
 build-function = "hatch_jupyter_builder.npm_builder"
